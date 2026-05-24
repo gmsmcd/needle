@@ -1,0 +1,2218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Needle Inventory Management</title>
+<style>
+/* ========== CSS RESET & VARIABLES ========== */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #f8fafc; --bg-card: #ffffff; --bg-input: #ffffff;
+  --text: #0f172a; --text-muted: #64748b; --text-secondary: #94a3b8;
+  --border: #e2e8f0; --border-input: #cbd5e1;
+  --primary: #2563eb; --primary-text: #ffffff;
+  --accent: #f1f5f9; --accent-hover: #e2e8f0;
+  --emerald-bg: #ecfdf5; --emerald-border: #6ee7b7; --emerald-text: #047857;
+  --orange-bg: #fff7ed; --orange-border: #fdba74; --orange-text: #c2410c;
+  --red-bg: #fef2f2; --red-border: #fca5a5; --red-text: #dc2626;
+  --teal-bg: #f0fdfa; --teal-border: #5eead4; --teal-text: #0f766e;
+  --amber-bg: #fffbeb; --amber-border: #fcd34d; --amber-text: #b45309;
+  --violet-bg: #f5f3ff; --violet-text: #7c3aed;
+  --shadow: 0 1px 3px rgba(0,0,0,0.08); --shadow-lg: 0 4px 12px rgba(0,0,0,0.12);
+  --radius: 12px; --radius-lg: 16px;
+  --nav-height: 60px; --header-height: 52px;
+}
+
+[data-theme="dark"] {
+  --bg: #0f172a; --bg-card: #1e293b; --bg-input: #1e293b;
+  --text: #f1f5f9; --text-muted: #94a3b8; --text-secondary: #64748b;
+  --border: #334155; --border-input: #475569;
+  --primary: #3b82f6; --primary-text: #ffffff;
+  --accent: #334155; --accent-hover: #475569;
+  --emerald-bg: rgba(6,78,59,0.2); --emerald-border: #065f46; --emerald-text: #34d399;
+  --orange-bg: rgba(124,45,18,0.2); --orange-border: #9a3412; --orange-text: #fb923c;
+  --red-bg: rgba(127,29,29,0.2); --red-border: #991b1b; --red-text: #f87171;
+  --teal-bg: rgba(17,94,89,0.2); --teal-border: #115e59; --teal-text: #5eead4;
+  --amber-bg: rgba(120,53,15,0.2); --amber-border: #92400e; --amber-text: #fbbf24;
+  --violet-bg: rgba(91,33,182,0.2); --violet-text: #a78bfa;
+  --shadow: 0 1px 3px rgba(0,0,0,0.3); --shadow-lg: 0 4px 12px rgba(0,0,0,0.4);
+}
+
+html { font-size: 14px; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: var(--bg); color: var(--text);
+  min-height: 100vh; min-height: 100dvh;
+  overflow-x: hidden; -webkit-tap-highlight-color: transparent;
+}
+
+/* ========== HEADER ========== */
+.header {
+  position: sticky; top: 0; z-index: 100;
+  background: var(--bg-card); border-bottom: 1px solid var(--border);
+  backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+  padding: 10px 16px; display: flex; align-items: center; justify-content: space-between;
+  height: var(--header-height);
+}
+.header-logo { display: flex; align-items: center; gap: 8px; }
+.header-logo-icon {
+  width: 32px; height: 32px; border-radius: 8px; background: var(--primary);
+  display: flex; align-items: center; justify-content: center; font-size: 18px;
+}
+.header-logo h1 { font-size: 17px; font-weight: 700; }
+.header-actions { display: flex; gap: 4px; }
+.header-btn {
+  padding: 8px; border-radius: 8px; border: none; background: transparent;
+  color: var(--text); cursor: pointer; font-size: 13px; font-weight: 700;
+  min-width: 36px; min-height: 36px; display: flex; align-items: center; justify-content: center;
+}
+.header-btn:hover { background: var(--accent); }
+
+/* ========== MAIN CONTENT ========== */
+.main {
+  padding: 12px 16px; padding-bottom: calc(var(--nav-height) + 16px);
+  min-height: calc(100vh - var(--header-height));
+}
+
+/* ========== BOTTOM NAV ========== */
+.bottom-nav {
+  position: fixed; bottom: 0; left: 0; right: 0; z-index: 100;
+  background: var(--bg-card); border-top: 1px solid var(--border);
+  backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+  display: grid; grid-template-columns: repeat(5, 1fr);
+  height: var(--nav-height);
+}
+.nav-item {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  border: none; background: transparent; color: var(--text-muted);
+  cursor: pointer; padding: 6px 4px; gap: 2px; -webkit-tap-highlight-color: transparent;
+}
+.nav-item.active { color: var(--primary); }
+.nav-item.active .nav-icon { stroke-width: 2.5; }
+.nav-icon { width: 22px; height: 22px; }
+.nav-label { font-size: 10px; font-weight: 500; }
+.nav-item.active .nav-label { font-weight: 700; }
+
+/* ========== CARDS ========== */
+.card {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); padding: 16px; box-shadow: var(--shadow);
+}
+.stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.stat-card {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); padding: 14px; box-shadow: var(--shadow);
+}
+.stat-icon {
+  width: 30px; height: 30px; border-radius: 8px;
+  display: flex; align-items: center; justify-content: center; margin-bottom: 8px;
+}
+.stat-label { font-size: 11px; font-weight: 500; color: var(--text-muted); }
+.stat-value { font-size: 22px; font-weight: 700; margin-top: 2px; }
+.stat-value-sm { font-size: 13px; font-weight: 700; margin-top: 2px; }
+
+/* ========== FORM ========== */
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.form-grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+.form-group { margin-bottom: 0; }
+.form-label {
+  display: block; font-size: 10px; font-weight: 600; color: var(--text-muted);
+  text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px;
+}
+.form-label-green { color: #059669; }
+.form-label-orange { color: #ea580c; }
+.form-input {
+  width: 100%; border-radius: var(--radius); border: 1px solid var(--border-input);
+  background: var(--bg-input); padding: 10px 12px; font-size: 13px;
+  color: var(--text); min-height: 44px; outline: none;
+}
+.form-input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(37,99,235,0.15); }
+.form-input-green {
+  background: var(--emerald-bg); border-color: var(--emerald-border);
+  color: var(--emerald-text); font-weight: 700; text-align: center;
+}
+.form-input-orange {
+  background: var(--orange-bg); border-color: var(--orange-border);
+  color: var(--orange-text); font-weight: 700; text-align: center;
+}
+
+/* ========== SEARCHABLE DROPDOWN ========== */
+.dropdown-wrapper { position: relative; }
+.dropdown-btn {
+  width: 100%; display: flex; align-items: center; justify-content: space-between;
+  border-radius: var(--radius); border: 1px solid var(--border-input);
+  background: var(--bg-input); padding: 10px 12px; font-size: 13px;
+  color: var(--text); min-height: 44px; cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.dropdown-btn span.placeholder { color: var(--text-muted); }
+.dropdown-chevron {
+  width: 16px; height: 16px; color: var(--text-muted); flex-shrink: 0; margin-left: 4px;
+  transition: transform 0.15s ease;
+}
+.dropdown-chevron.open { transform: rotate(180deg); }
+.dropdown-menu {
+  position: absolute; z-index: 200; width: 100%; margin-top: 4px;
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: var(--radius); box-shadow: var(--shadow-lg);
+  max-height: 220px; overflow: hidden;
+}
+.dropdown-search-wrap {
+  padding: 8px; border-bottom: 1px solid var(--border);
+  position: sticky; top: 0; background: var(--bg-card); z-index: 1;
+}
+.dropdown-search {
+  width: 100%; border-radius: 8px; border: 1px solid var(--border-input);
+  background: var(--bg-input); padding: 8px 10px 8px 32px; font-size: 13px;
+  color: var(--text); outline: none;
+}
+.dropdown-search-icon {
+  position: absolute; left: 16px; top: 50%; transform: translateY(-50%);
+  width: 14px; height: 14px; color: var(--text-muted);
+}
+.dropdown-options { overflow-y: auto; max-height: 160px; }
+.dropdown-option {
+  width: 100%; text-align: left; padding: 10px 12px; font-size: 13px;
+  border: none; background: transparent; color: var(--text);
+  cursor: pointer; min-height: 44px; display: flex; align-items: center;
+  -webkit-tap-highlight-color: transparent;
+}
+.dropdown-option:hover, .dropdown-option:active { background: var(--accent); }
+.dropdown-option.selected { background: var(--accent); font-weight: 600; }
+.dropdown-empty { padding: 10px 12px; font-size: 13px; color: var(--text-muted); }
+
+/* ========== BALANCE BOX ========== */
+.balance-box {
+  border-radius: var(--radius-lg); padding: 16px; border: 2px solid;
+  margin-top: 10px;
+}
+.balance-box.low { border-color: var(--red-border); background: var(--red-bg); }
+.balance-box.ok { border-color: var(--teal-border); background: var(--teal-bg); }
+.balance-header { display: flex; align-items: center; justify-content: space-between; }
+.balance-label { font-size: 13px; font-weight: 600; }
+.balance-warning { display: flex; align-items: center; gap: 4px; font-size: 11px; color: var(--red-text); font-weight: 500; }
+.balance-value { font-size: 28px; font-weight: 700; margin-top: 4px; }
+.balance-value.low { color: var(--red-text); }
+.balance-value.ok { color: var(--teal-text); }
+.balance-calc { font-size: 11px; color: var(--text-muted); margin-top: 4px; }
+
+/* ========== SAVE BUTTON ========== */
+.save-bar {
+  position: fixed; bottom: var(--nav-height); left: 0; right: 0; z-index: 90;
+  padding: 10px 16px; background: var(--bg-card);
+  border-top: 1px solid var(--border);
+  backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+}
+.save-btn {
+  width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px;
+  border-radius: var(--radius); background: var(--primary); color: var(--primary-text);
+  padding: 13px; font-size: 15px; font-weight: 700; border: none;
+  cursor: pointer; min-height: 48px; box-shadow: var(--shadow-lg);
+  transition: transform 0.1s ease;
+}
+.save-btn:active { transform: scale(0.98); }
+
+/* ========== EDIT BANNER ========== */
+.edit-banner {
+  display: flex; align-items: center; gap: 8px;
+  background: var(--amber-bg); border: 1px solid var(--amber-border);
+  border-radius: var(--radius); padding: 10px 12px; margin-bottom: 10px;
+}
+.edit-banner-text { font-size: 13px; color: var(--amber-text); flex: 1; }
+.edit-banner-close {
+  background: transparent; border: none; color: var(--amber-text); cursor: pointer;
+  padding: 4px;
+}
+
+/* ========== HISTORY ========== */
+.filter-card { margin-bottom: 10px; }
+.filter-header { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+.filter-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.filter-input {
+  border-radius: 8px; border: 1px solid var(--border-input);
+  background: var(--bg-input); padding: 8px; font-size: 11px;
+  color: var(--text); min-height: 40px; width: 100%; outline: none;
+}
+.filter-clear { margin-left: auto; font-size: 11px; color: var(--text-muted); cursor: pointer; border: none; background: transparent; }
+
+.posting-card {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); padding: 12px; box-shadow: var(--shadow);
+}
+.posting-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 8px; }
+.posting-title { font-size: 13px; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.posting-subtitle { font-size: 11px; color: var(--text-muted); }
+.posting-actions { display: flex; gap: 4px; flex-shrink: 0; margin-left: 8px; }
+.posting-action-btn {
+  padding: 6px; border-radius: 8px; border: none; background: transparent;
+  cursor: pointer; color: var(--text-muted);
+}
+.posting-action-btn:hover { background: var(--accent); }
+.posting-action-btn.danger:hover { background: var(--red-bg); color: var(--red-text); }
+.posting-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; }
+.posting-stat {
+  border-radius: 8px; padding: 6px; text-align: center;
+}
+.posting-stat-label { font-size: 10px; }
+.posting-stat-value { font-size: 12px; font-weight: 700; }
+.posting-footer { display: flex; justify-content: space-between; margin-top: 8px; font-size: 11px; color: var(--text-muted); }
+
+/* ========== REPORTS ========== */
+.report-type-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
+.report-type-btn {
+  border-radius: var(--radius); padding: 10px; font-size: 12px; font-weight: 500;
+  border: none; cursor: pointer; text-align: left; min-height: 44px;
+  background: var(--accent); color: var(--text);
+  transition: all 0.15s ease;
+}
+.report-type-btn.active { background: var(--primary); color: var(--primary-text); box-shadow: var(--shadow-lg); }
+.report-summary-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; text-align: center; }
+.export-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 10px; }
+.export-btn {
+  display: flex; align-items: center; justify-content: center; gap: 4px;
+  border-radius: var(--radius); padding: 10px; font-size: 11px; font-weight: 500;
+  border: none; cursor: pointer; color: white; min-height: 44px;
+  transition: transform 0.1s ease;
+}
+.export-btn:active { transform: scale(0.98); }
+.export-btn.excel { background: #059669; }
+.export-btn.pdf { background: #e11d48; }
+.export-btn.print { background: #475569; }
+
+/* ========== SETTINGS ========== */
+.setting-row { display: flex; align-items: center; justify-content: space-between; }
+.toggle-track {
+  position: relative; width: 44px; height: 26px; border-radius: 13px;
+  border: none; cursor: pointer; transition: background 0.2s;
+}
+.toggle-track.on { background: var(--primary); }
+.toggle-track.off { background: var(--accent); }
+.toggle-thumb {
+  position: absolute; top: 2px; width: 22px; height: 22px; border-radius: 50%;
+  background: white; box-shadow: 0 1px 3px rgba(0,0,0,0.2); transition: transform 0.2s;
+}
+.toggle-track.on .toggle-thumb { transform: translateX(20px); }
+.toggle-track.off .toggle-thumb { transform: translateX(2px); }
+
+.lang-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
+.lang-btn {
+  border-radius: var(--radius); padding: 10px; font-size: 13px; font-weight: 500;
+  border: none; cursor: pointer; min-height: 44px;
+  background: var(--accent); color: var(--text);
+}
+.lang-btn.active { background: var(--primary); color: var(--primary-text); box-shadow: var(--shadow-lg); }
+
+.bulk-field-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-bottom: 10px; }
+.bulk-field-btn {
+  border-radius: var(--radius); padding: 8px; font-size: 11px; font-weight: 500;
+  border: none; cursor: pointer; min-height: 40px;
+  background: var(--accent); color: var(--text); text-align: center;
+}
+.bulk-field-btn.active { background: var(--primary); color: var(--primary-text); box-shadow: var(--shadow-lg); }
+
+.bulk-textarea {
+  width: 100%; border-radius: var(--radius); border: 1px solid var(--border-input);
+  background: var(--bg-input); padding: 10px 12px; font-size: 13px;
+  color: var(--text); min-height: 100px; outline: none; resize: vertical;
+}
+.bulk-add-btn {
+  width: 100%; margin-top: 8px; display: flex; align-items: center; justify-content: center; gap: 6px;
+  border-radius: var(--radius); background: #059669; color: white;
+  padding: 12px; font-size: 13px; font-weight: 700; border: none;
+  cursor: pointer; min-height: 44px;
+}
+.bulk-add-btn:active { transform: scale(0.98); }
+
+.bulk-delete-item-btn:hover { opacity: 0.8; }
+.bulk-delete-item-btn:active { transform: scale(0.95); }
+
+.price-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 8px 0; border-bottom: 1px solid var(--border); gap: 8px;
+}
+.price-row:last-child { border-bottom: none; }
+.price-name { flex: 1; min-width: 0; overflow: hidden; }
+.price-name-text { font-size: 12px; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.price-name-cat { font-size: 10px; color: var(--text-muted); }
+.price-actions { display: flex; align-items: center; gap: 4px; flex-shrink: 0; }
+.price-value { font-size: 12px; font-weight: 700; color: var(--primary); min-width: 36px; text-align: right; }
+.price-edit-btn {
+  padding: 4px; border-radius: 6px; border: none; background: transparent;
+  cursor: pointer; color: var(--text-muted);
+}
+.price-edit-btn:hover { background: var(--accent); }
+.price-edit-input {
+  width: 56px; border-radius: 6px; border: 1px solid var(--border-input);
+  background: var(--bg-input); padding: 4px 6px; font-size: 12px;
+  text-align: center; min-height: 32px; outline: none; color: var(--text);
+}
+.price-save-btn { padding: 4px; border-radius: 6px; border: none; background: var(--emerald-bg); color: var(--emerald-text); cursor: pointer; }
+.price-cancel-btn { padding: 4px; border-radius: 6px; border: none; background: var(--accent); color: var(--text-muted); cursor: pointer; }
+
+.seed-btn {
+  width: 100%; border-radius: var(--radius); background: #0d9488; color: white;
+  padding: 12px; font-size: 13px; font-weight: 500; border: none;
+  cursor: pointer; min-height: 44px;
+}
+.seed-btn:active { transform: scale(0.98); }
+
+/* ========== ALERTS ========== */
+.alert-box {
+  border-radius: var(--radius-lg); padding: 14px; margin-bottom: 12px;
+}
+.alert-box.red { background: var(--red-bg); border: 1px solid var(--red-border); }
+.alert-header { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+.alert-title { font-size: 13px; font-weight: 700; color: var(--red-text); }
+.alert-item { display: flex; justify-content: space-between; font-size: 13px; padding: 2px 0; }
+.alert-item-name { color: var(--red-text); }
+.alert-item-value { font-weight: 700; color: var(--red-text); }
+
+/* ========== TOAST ========== */
+.toast-container { position: fixed; top: 60px; right: 16px; z-index: 9999; display: flex; flex-direction: column; gap: 8px; }
+.toast {
+  padding: 12px 16px; border-radius: var(--radius); color: white;
+  font-size: 13px; font-weight: 500; box-shadow: var(--shadow-lg);
+  animation: toastIn 0.3s ease, toastOut 0.3s ease 2.7s forwards;
+  max-width: 300px;
+}
+.toast.success { background: #059669; }
+.toast.error { background: #dc2626; }
+.toast.info { background: #2563eb; }
+@keyframes toastIn { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
+@keyframes toastOut { from { opacity: 1; } to { opacity: 0; } }
+
+/* ========== EMPTY STATE ========== */
+.empty-state { text-align: center; padding: 40px 16px; color: var(--text-muted); }
+.empty-icon { width: 48px; height: 48px; margin: 0 auto 12px; opacity: 0.3; }
+
+/* ========== MISC ========== */
+.space-y > * + * { margin-top: 10px; }
+.mb-2 { margin-bottom: 8px; }
+.mb-3 { margin-bottom: 12px; }
+.mt-2 { margin-top: 8px; }
+.text-center { text-align: center; }
+.text-xs { font-size: 11px; }
+.text-muted { color: var(--text-muted); }
+.font-bold { font-weight: 700; }
+.truncate { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.spinner { width: 24px; height: 24px; border: 3px solid var(--border); border-top-color: var(--primary); border-radius: 50%; animation: spin 0.8s linear infinite; margin: 32px auto; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.hidden { display: none !important; }
+
+/* ========== PRINT ========== */
+@media print {
+  .header, .bottom-nav, .save-bar, .export-grid, .report-type-grid { display: none !important; }
+  .main { padding: 0; }
+  body { background: white; color: black; }
+  .card { box-shadow: none; border: 1px solid #ccc; }
+}
+</style>
+</head>
+<body>
+
+<!-- Toast Container -->
+<div class="toast-container" id="toastContainer"></div>
+
+<!-- Header -->
+<header class="header">
+  <div class="header-logo">
+    <div class="header-logo-icon">🪡</div>
+    <h1 id="headerTitle">Needle Inventory</h1>
+  </div>
+  <div class="header-actions">
+    <button class="header-btn" id="themeToggle" title="Toggle theme">🌙</button>
+    <button class="header-btn" id="langToggle" title="Toggle language">বাং</button>
+  </div>
+</header>
+
+<!-- Main Content -->
+<main class="main" id="mainContent">
+  <!-- Content will be rendered by JS -->
+</main>
+
+<!-- Bottom Navigation -->
+<nav class="bottom-nav" id="bottomNav">
+  <button class="nav-item active" data-tab="dashboard">
+    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+    <span class="nav-label" data-i18n="dashboard">Dashboard</span>
+  </button>
+  <button class="nav-item" data-tab="newPosting">
+    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+    <span class="nav-label" data-i18n="newPosting">New Posting</span>
+  </button>
+  <button class="nav-item" data-tab="history">
+    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12,6 12,12 16,14"/></svg>
+    <span class="nav-label" data-i18n="history">History</span>
+  </button>
+  <button class="nav-item" data-tab="reports">
+    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+    <span class="nav-label" data-i18n="reports">Reports</span>
+  </button>
+  <button class="nav-item" data-tab="settings">
+    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+    <span class="nav-label" data-i18n="settings">Settings</span>
+  </button>
+</nav>
+
+<!-- Save Bar (shown in newPosting tab) -->
+<div class="save-bar hidden" id="saveBar">
+  <button class="save-btn" id="saveBtn">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17,21 17,13 7,13 7,21"/><polyline points="7,3 7,8 15,8"/></svg>
+    <span id="saveBtnText">Save Posting</span>
+  </button>
+</div>
+
+<script>
+// ========== CONFIGURATION ==========
+const FIREBASE_URL = 'https://sajulamia34345544-default-rtdb.firebaseio.com';
+
+// ========== STATE ==========
+const state = {
+  language: localStorage.getItem('needleLang') || 'en',
+  darkMode: localStorage.getItem('needleDark') === 'true',
+  activeTab: 'dashboard',
+  editingId: null,
+  openDropdownKey: null,
+  masterData: null,
+  dashboardStats: null,
+  postings: [],
+  needlePrices: [],
+  loading: false,
+  editingPriceId: null,
+  editPriceValue: 0,
+  bulkAddField: 'campuses',
+  bulkAddText: '',
+  bulkFloorCampusId: '',
+  bulkSearchFilter: '',
+  formData: {
+    date: new Date().toISOString().split('T')[0], week: '', campus: '',
+    floor: '', category: '', unit: '', type: '', needleType: '',
+    unitPrice: 0, challanNo: '', previousBL: 0, rcvd: 0, dlvd: 0,
+  },
+  filters: { date: '', needleType: '', floor: '', campus: '', challanNo: '' },
+  reportType: 'daily',
+  reportFromDate: new Date().toISOString().split('T')[0],
+  reportToDate: new Date().toISOString().split('T')[0],
+};
+
+// ========== TRANSLATIONS ==========
+const T = {
+  en: {
+    appName: 'Needle Inventory', dashboard: 'Dashboard', newPosting: 'New Posting',
+    history: 'History', reports: 'Reports', settings: 'Settings',
+    totalReceived: 'Total Received', totalDelivered: 'Total Delivered',
+    currentBalance: 'Current Balance', mostUsedNeedle: 'Most Used',
+    lowStockAlert: 'Low Stock Alert', recentActivity: 'Recent Activity',
+    date: 'Date', week: 'Week', campusName: 'Campus Name',
+    floorName: 'Floor / Location', category: 'Category', unit: 'Unit',
+    type: 'Type', needleType: 'Needle Type', unitPrice: 'Unit Price',
+    challanNo: 'Challan No', previousBL: 'Previous BL', rcvd: 'Received',
+    dlvd: 'Delivered', balance: 'Balance', save: 'Save Posting',
+    update: 'Update Posting', selectCampus: 'Select Campus',
+    selectFloor: 'Select Floor', selectCategory: 'Select Category',
+    selectUnit: 'Select Unit', selectType: 'Select Type',
+    selectNeedle: 'Select Needle Type', enterPrice: 'Price',
+    enterChallan: 'Enter Challan No', filterBy: 'Filter By',
+    allCampuses: 'All Campuses', allNeedles: 'All Needles',
+    searchChallan: 'Search Challan', noRecords: 'No records found',
+    dailyReport: 'Daily Report', weeklyReport: 'Weekly Report',
+    monthlyReport: 'Monthly Report', consumptionReport: 'Consumption Report',
+    floorWiseReport: 'Floor-wise Report', campusWiseReport: 'Campus-wise Report',
+    exportExcel: 'Export Excel', exportPDF: 'Export PDF', print: 'Print',
+    from: 'From', to: 'To', lowStockWarning: 'Low Stock Warning!',
+    duplicateChallan: 'Duplicate Challan No!',
+    saveSuccess: 'Posting saved successfully!',
+    updateSuccess: 'Posting updated successfully!',
+    deleteSuccess: 'Posting deleted successfully!',
+    confirmDelete: 'Are you sure you want to delete this posting?',
+    needlePriceMaster: 'Needle Price Master', darkMode: 'Dark Mode',
+    lightMode: 'Light Mode', language: 'Language', receiving: 'Receiving',
+    delivery: 'Delivery', editingMode: 'Editing Posting',
+    search: 'Search...', noResults: 'No results', clear: 'Clear',
+    reportType: 'Report Type', reportSummary: 'Report Summary',
+    entries: 'entries', bulkAddTitle: 'Bulk Add Dropdown Options',
+    bulkAddDesc: 'Enter one item per line. Bulk add options to any dropdown field.',
+    campus: 'Campus', floor: 'Floor', cat: 'Category', u: 'Unit',
+    tp: 'Type', nt: 'Needle Type', bulkAdd: 'Bulk Add',
+    current: 'Current', items: 'items', loadFirebase: 'Load Firebase Data',
+    loadFirebaseDesc: 'Load master data to Firebase',
+    loadData: 'Load Data to Firebase', setRate: 'Set Rate',
+    loadFirst: 'Load Firebase Data first', pleaseFill: 'Please fill required fields',
+    saveFailed: 'Save failed', deleteFailed: 'Delete failed',
+    added: 'items added', failedAdd: 'Failed to add', enterItems: 'Please enter items',
+    rateUpdated: 'Rate updated', updateFailed: 'Update failed',
+    firebaseSeeded: 'Firebase seeded', seedFailed: 'Seed failed',
+    alreadySeeded: 'Already seeded', about: 'Garment Factory Needle Management System',
+    exampleItems: 'One item per line...\nExample:\n6th Floor\n7th Floor\n8th Floor',
+    existingItems: 'Existing Items', deleteItem: 'Delete', confirmDeleteItem: 'Delete this item?',
+    selectCampusForFloor: 'Select Campus for Floor',
+    skippedDuplicates: 'skipped (already exist)',
+    noItemsYet: 'No items yet',
+    searchItems: 'Search items...',
+    itemDeleted: 'Item deleted', deleteFailedMsg: 'Delete failed',
+  },
+  bn: {
+    appName: 'সুই ইনভেন্টরি', dashboard: 'ড্যাশবোর্ড', newPosting: 'নতুন পোস্টিং',
+    history: 'ইতিহাস', reports: 'রিপোর্ট', settings: 'সেটিংস',
+    totalReceived: 'মোট গৃহীত', totalDelivered: 'মোট প্রদত্ত',
+    currentBalance: 'বর্তমান ব্যালেন্স', mostUsedNeedle: 'সর্বাধিক ব্যবহৃত',
+    lowStockAlert: 'স্টক কম', recentActivity: 'সাম্প্রতিক কার্যক্রম',
+    date: 'তারিখ', week: 'সপ্তাহ', campusName: 'ক্যাম্পাসের নাম',
+    floorName: 'ফ্লোর / অবস্থান', category: 'ক্যাটাগরি', unit: 'একক',
+    type: 'ধরন', needleType: 'সুইয়ের ধরন', unitPrice: 'একক মূল্য',
+    challanNo: 'চালান নং', previousBL: 'পূর্বের ব্যালেন্স', rcvd: 'গৃহীত',
+    dlvd: 'প্রদত্ত', balance: 'ব্যালেন্স', save: 'পোস্টিং সংরক্ষণ',
+    update: 'পোস্টিং আপডেট', selectCampus: 'ক্যাম্পাস নির্বাচন',
+    selectFloor: 'ফ্লোর নির্বাচন', selectCategory: 'ক্যাটাগরি নির্বাচন',
+    selectUnit: 'একক নির্বাচন', selectType: 'ধরন নির্বাচন',
+    selectNeedle: 'সুইয়ের ধরন নির্বাচন', enterPrice: 'মূল্য',
+    enterChallan: 'চালান নং লিখুন', filterBy: 'ফিল্টার',
+    allCampuses: 'সকল ক্যাম্পাস', allNeedles: 'সকল সুই',
+    searchChallan: 'চালান খুঁজুন', noRecords: 'কোন রেকর্ড পাওয়া যায়নি',
+    dailyReport: 'দৈনিক রিপোর্ট', weeklyReport: 'সাপ্তাহিক রিপোর্ট',
+    monthlyReport: 'মাসিক রিপোর্ট', consumptionReport: 'খরচ রিপোর্ট',
+    floorWiseReport: 'ফ্লোরভিত্তিক রিপোর্ট', campusWiseReport: 'ক্যাম্পাসভিত্তিক রিপোর্ট',
+    exportExcel: 'এক্সেল রপ্তানি', exportPDF: 'পিডিএফ রপ্তানি', print: 'প্রিন্ট',
+    from: 'থেকে', to: 'পর্যন্ত', lowStockWarning: 'স্টক কম সতর্কতা!',
+    duplicateChallan: 'ডুপ্লিকেট চালান নং!',
+    saveSuccess: 'পোস্টিং সফলভাবে সংরক্ষিত!',
+    updateSuccess: 'পোস্টিং সফলভাবে আপডেট!',
+    deleteSuccess: 'পোস্টিং সফলভাবে মুছে ফেলা হয়েছে!',
+    confirmDelete: 'আপনি কি এই পোস্টিং মুছে ফেলতে চান?',
+    needlePriceMaster: 'সুই মূল্য মাস্টার', darkMode: 'ডার্ক মোড',
+    lightMode: 'লাইট মোড', language: 'ভাষা', receiving: 'গ্রহণ',
+    delivery: 'প্রদান', editingMode: 'পোস্টিং সম্পাদনা মোড',
+    search: 'খুঁজুন...', noResults: 'কিছু পাওয়া যায়নি', clear: 'মুছুন',
+    reportType: 'রিপোর্টের ধরন', reportSummary: 'রিপোর্ট সারাংশ',
+    entries: 'টি এন্ট্রি', bulkAddTitle: 'ড্রপডাউন অপশন বাল্ক অ্যাড',
+    bulkAddDesc: 'প্রতিটি লাইনে একটি করে আইটেম লিখুন। সব ড্রপডাউন ফিল্ডে বাল্ক আকারে অপশন যোগ করুন।',
+    campus: 'ক্যাম্পাস', floor: 'ফ্লোর', cat: 'ক্যাটাগরি', u: 'একক',
+    tp: 'টাইপ', nt: 'নিডেল টাইপ', bulkAdd: 'বাল্ক অ্যাড করুন',
+    current: 'বর্তমান', items: 'টি আইটেম', loadFirebase: 'ফায়ারবেস ডাটা লোড',
+    loadFirebaseDesc: 'মাস্টার ডাটা ফায়ারবেসে লোড করুন',
+    loadData: 'ডাটা লোড করুন', setRate: 'রেট সেট করুন',
+    loadFirst: 'ফায়ারবেস ডাটা লোড করুন', pleaseFill: 'প্রয়োজনীয় ক্ষেত্র পূরণ করুন',
+    saveFailed: 'সংরক্ষণ ব্যর্থ', deleteFailed: 'মুছে ফেলা ব্যর্থ',
+    added: 'টি যোগ হয়েছে', failedAdd: 'যোগ করা ব্যর্থ', enterItems: 'কিছু লিখুন',
+    rateUpdated: 'রেট আপডেট হয়েছে', updateFailed: 'আপডেট ব্যর্থ',
+    firebaseSeeded: 'ফায়ারবেস ডাটা লোড হয়েছে', seedFailed: 'ডাটা লোড ব্যর্থ',
+    alreadySeeded: 'ইতিমধ্যে লোড করা আছে', about: 'পোশাক কারখানা সুই ব্যবস্থাপনা সিস্টেম',
+    exampleItems: 'প্রতিটি লাইনে একটি করে আইটেম লিখুন...\nউদাহরণ:\n6th Floor\n7th Floor\n8th Floor',
+    existingItems: 'বিদ্যমান আইটেম', deleteItem: 'মুছুন', confirmDeleteItem: 'এই আইটেমটি মুছে ফেলবেন?',
+    selectCampusForFloor: 'ফ্লোরের জন্য ক্যাম্পাস নির্বাচন করুন',
+    skippedDuplicates: 'টি স্কিপ (ইতিমধ্যে আছে)',
+    noItemsYet: 'কোন আইটেম নেই',
+    searchItems: 'আইটেম খুঁজুন...',
+    itemDeleted: 'আইটেম মুছে ফেলা হয়েছে', deleteFailedMsg: 'মুছে ফেলা ব্যর্থ',
+  }
+};
+
+function t(key) { return T[state.language][key] || T.en[key] || key; }
+
+// ========== FIREBASE HELPERS ==========
+async function fbGet(path) {
+  try {
+    const res = await fetch(`${FIREBASE_URL}/${path}.json`);
+    if (!res.ok) return null;
+    return await res.json();
+  } catch (e) { console.error('FB GET error:', e); return null; }
+}
+
+async function fbPush(path, data) {
+  try {
+    const res = await fetch(`${FIREBASE_URL}/${path}.json`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data),
+    });
+    if (!res.ok) return null;
+    const result = await res.json();
+    return result.name;
+  } catch (e) { console.error('FB PUSH error:', e); return null; }
+}
+
+async function fbPatch(path, data) {
+  try {
+    const res = await fetch(`${FIREBASE_URL}/${path}.json`, {
+      method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data),
+    });
+    return res.ok;
+  } catch (e) { console.error('FB PATCH error:', e); return false; }
+}
+
+async function fbDelete(path) {
+  try {
+    const res = await fetch(`${FIREBASE_URL}/${path}.json`, { method: 'DELETE' });
+    return res.ok;
+  } catch (e) { console.error('FB DELETE error:', e); return false; }
+}
+
+function fbToArray(data) {
+  if (!data) return [];
+  return Object.entries(data).map(([key, value]) => ({ ...value, id: key }));
+}
+
+// ========== TOAST ==========
+function showToast(msg, type = 'success') {
+  const container = document.getElementById('toastContainer');
+  const toast = document.createElement('div');
+  toast.className = `toast ${type}`;
+  toast.textContent = msg;
+  container.appendChild(toast);
+  setTimeout(() => toast.remove(), 3000);
+}
+
+// ========== THEME ==========
+function applyTheme() {
+  document.documentElement.setAttribute('data-theme', state.darkMode ? 'dark' : 'light');
+  document.getElementById('themeToggle').textContent = state.darkMode ? '☀️' : '🌙';
+  localStorage.setItem('needleDark', state.darkMode);
+}
+
+// ========== LANGUAGE ==========
+function applyLanguage() {
+  document.getElementById('headerTitle').textContent = t('appName');
+  document.getElementById('langToggle').textContent = state.language === 'en' ? 'বাং' : 'EN';
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    el.textContent = t(el.dataset.i18n);
+  });
+  localStorage.setItem('needleLang', state.language);
+  renderTab();
+}
+
+// ========== DATA FETCHING ==========
+async function fetchMasterData() {
+  try {
+    const [campusesRaw, floorsRaw, categoriesRaw, needleTypesRaw, needlePriceRaw, unitsRaw] = await Promise.all([
+      fbGet('campuses'), fbGet('floors'), fbGet('categories'),
+      fbGet('needleTypes'), fbGet('needlePriceMaster'), fbGet('units')
+    ]);
+    const campuses = fbToArray(campusesRaw);
+    const floors = fbToArray(floorsRaw);
+    const categories = fbToArray(categoriesRaw);
+    const needleTypes = fbToArray(needleTypesRaw);
+    const needlePriceMaster = fbToArray(needlePriceRaw);
+    const unitsArr = unitsRaw ? Object.values(unitsRaw).map(u => u.name || u) : ['PCS', 'BOX', 'SET', 'PACK'];
+
+    // Enrich campuses with floors
+    campuses.forEach(c => {
+      c.floors = floors.filter(f => f.campusId === c.id);
+    });
+
+    state.masterData = { campuses, floors, categories, needleTypes, units: unitsArr };
+    state.needlePrices = needlePriceMaster;
+  } catch (e) { console.error('fetchMasterData error:', e); }
+}
+
+async function fetchDashboard() {
+  try {
+    const postingsRaw = await fbGet('postings');
+    const allPostings = fbToArray(postingsRaw).sort((a, b) =>
+      new Date(b.createdAt || b.date) - new Date(a.createdAt || a.date)
+    );
+
+    let totalReceived = 0, totalDelivered = 0;
+    const balanceMap = {};
+    const deliveryCount = {};
+
+    allPostings.forEach(p => {
+      totalReceived += (p.rcvd || 0);
+      totalDelivered += (p.dlvd || 0);
+      const key = `${p.needleType}|${p.campusName}|${p.floorName}`;
+      if (!balanceMap[key] || new Date(p.createdAt || p.date) > new Date(balanceMap[key].createdAt || balanceMap[key].date)) {
+        balanceMap[key] = p;
+      }
+      deliveryCount[p.needleType] = (deliveryCount[p.needleType] || 0) + (p.dlvd || 0);
+    });
+
+    const currentBalance = Object.values(balanceMap).reduce((sum, p) => sum + (p.balance || 0), 0);
+    const mostUsed = Object.entries(deliveryCount).sort((a, b) => b[1] - a[1])[0];
+    const lowStockAlerts = Object.values(balanceMap)
+      .filter(p => p.balance < 50)
+      .map(p => ({ needleType: p.needleType, balance: p.balance }));
+    const recentActivity = allPostings.slice(0, 10);
+
+    state.dashboardStats = { totalReceived, totalDelivered, currentBalance, mostUsedNeedle: mostUsed?.[0] || null, lowStockAlerts, recentActivity };
+  } catch (e) { console.error('fetchDashboard error:', e); }
+}
+
+async function fetchPostings() {
+  state.loading = true;
+  try {
+    const postingsRaw = await fbGet('postings');
+    let allPostings = fbToArray(postingsRaw).sort((a, b) =>
+      new Date(b.createdAt || b.date) - new Date(a.createdAt || a.date)
+    );
+
+    // Apply filters
+    if (state.filters.date) allPostings = allPostings.filter(p => p.date === state.filters.date);
+    if (state.filters.campus) allPostings = allPostings.filter(p => p.campusName === state.filters.campus || p.campus === state.filters.campus);
+    if (state.filters.needleType) allPostings = allPostings.filter(p => p.needleType === state.filters.needleType);
+    if (state.filters.challanNo) allPostings = allPostings.filter(p => p.challanNo?.includes(state.filters.challanNo));
+
+    state.postings = allPostings;
+  } catch (e) { console.error('fetchPostings error:', e); }
+  state.loading = false;
+}
+
+// ========== AUTO WEEK CALCULATION ==========
+function calcWeek(dateStr) {
+  if (!dateStr) return '';
+  const d = new Date(dateStr);
+  const start = new Date(d.getFullYear(), 0, 1);
+  const dayNum = Math.floor((d - start) / 86400000) + 1;
+  return 'W' + Math.ceil(dayNum / 7);
+}
+
+// ========== AUTO-FILL FROM NEEDLE PRICE ==========
+function autofillFromNeedleType(needleType) {
+  if (!needleType) return;
+  const priceEntry = state.needlePrices.find(p => p.needleType === needleType);
+  if (priceEntry) {
+    state.formData.unitPrice = priceEntry.unitPrice;
+    state.formData.unit = priceEntry.unit;
+    if (priceEntry.category) state.formData.category = priceEntry.category;
+  }
+}
+
+// ========== AUTO PREVIOUS BALANCE ==========
+async function fetchPrevBalance() {
+  const { needleType, campus, floor } = state.formData;
+  if (!needleType || !campus || !floor || state.editingId) return;
+  try {
+    const postingsRaw = await fbGet('postings');
+    const allPostings = fbToArray(postingsRaw);
+    const filtered = allPostings
+      .filter(p => p.needleType === needleType && p.campusName === campus && p.floorName === floor)
+      .sort((a, b) => new Date(b.createdAt || b.date) - new Date(a.createdAt || a.date));
+    if (filtered.length > 0) {
+      state.formData.previousBL = filtered[0].balance || 0;
+    } else {
+      state.formData.previousBL = 0;
+    }
+  } catch (e) { console.error('fetchPrevBalance error:', e); }
+}
+
+// ========== CALCULATED BALANCE ==========
+function getCalculatedBalance() {
+  return state.formData.previousBL + state.formData.rcvd - state.formData.dlvd;
+}
+
+// ========== SYNC FORM TO STATE ==========
+function syncFormToState() {
+  if (state.activeTab !== 'newPosting') return;
+  const dateEl = document.getElementById('formDate');
+  const weekEl = document.getElementById('formWeek');
+  const prevBLEl = document.getElementById('formPrevBL');
+  const rcvdEl = document.getElementById('formRcvd');
+  const dlvdEl = document.getElementById('formDlvd');
+  const unitPriceEl = document.getElementById('formUnitPrice');
+  const challanEl = document.getElementById('formChallanNo');
+  if (dateEl) state.formData.date = dateEl.value;
+  if (weekEl) state.formData.week = weekEl.value;
+  if (prevBLEl) state.formData.previousBL = parseFloat(prevBLEl.value) || 0;
+  if (rcvdEl) state.formData.rcvd = parseFloat(rcvdEl.value) || 0;
+  if (dlvdEl) state.formData.dlvd = parseFloat(dlvdEl.value) || 0;
+  if (unitPriceEl) state.formData.unitPrice = parseFloat(unitPriceEl.value) || 0;
+  if (challanEl) state.formData.challanNo = challanEl.value;
+}
+
+// ========== SEARCHABLE DROPDOWN HTML ==========
+function dropdownHTML(fieldKey, label, value, options, placeholder, required = false, isObjOptions = false) {
+  const isOpen = state.openDropdownKey === fieldKey;
+  const reqMark = required ? ' *' : '';
+  const chevronClass = isOpen ? 'dropdown-chevron open' : 'dropdown-chevron';
+
+  // For object options (like type: {value, label}), determine display text
+  let displayValue = value;
+  if (isObjOptions && value) {
+    const found = options.find(o => o.value === value);
+    displayValue = found ? found.label : value;
+  }
+
+  let optsHTML = '';
+  if (isOpen) {
+    optsHTML = `<div class="dropdown-menu" id="dropdown-menu-${fieldKey}">
+      <div class="dropdown-search-wrap" style="position:relative">
+        <svg class="dropdown-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input class="dropdown-search" type="text" data-dropdown-search="${fieldKey}" placeholder="${t('search')}" autofocus>
+      </div>
+      <div class="dropdown-options" id="dropdown-options-${fieldKey}">`;
+    options.forEach(opt => {
+      let optValue, optLabel;
+      if (isObjOptions) {
+        optValue = opt.value;
+        optLabel = opt.label;
+      } else {
+        optValue = opt;
+        optLabel = opt;
+      }
+      const sel = value === optValue ? ' selected' : '';
+      optsHTML += `<button class="dropdown-option${sel}" data-dropdown-select="${fieldKey}" data-value="${escHTML(optValue)}">${escHTML(optLabel)}</button>`;
+    });
+    if (options.length === 0) {
+      optsHTML += `<div class="dropdown-empty">${t('noResults')}</div>`;
+    }
+    optsHTML += `</div></div>`;
+  }
+
+  return `<div class="form-group dropdown-wrapper" data-dropdown-wrapper="${fieldKey}">
+    <label class="form-label">${escHTML(label)}${reqMark}</label>
+    <button class="dropdown-btn" data-dropdown-toggle="${fieldKey}" type="button">
+      <span class="${displayValue ? '' : 'placeholder'}">${displayValue ? escHTML(displayValue) : escHTML(placeholder)}</span>
+      <svg class="${chevronClass}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6,9 12,15 18,9"/></svg>
+    </button>
+    ${optsHTML}
+  </div>`;
+}
+
+function escHTML(str) {
+  if (!str) return '';
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ========== RENDER TABS ==========
+function renderTab() {
+  const main = document.getElementById('mainContent');
+  const saveBar = document.getElementById('saveBar');
+
+  switch (state.activeTab) {
+    case 'dashboard': main.innerHTML = renderDashboard(); saveBar.classList.add('hidden'); break;
+    case 'newPosting': main.innerHTML = renderNewPosting(); saveBar.classList.remove('hidden'); break;
+    case 'history': main.innerHTML = renderHistory(); saveBar.classList.add('hidden'); break;
+    case 'reports': main.innerHTML = renderReports(); saveBar.classList.add('hidden'); break;
+    case 'settings': main.innerHTML = renderSettings(); saveBar.classList.add('hidden'); break;
+  }
+
+  // Update nav active state
+  document.querySelectorAll('.nav-item').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.tab === state.activeTab);
+  });
+
+  // Bind events after render
+  bindTabEvents();
+
+  // Auto-focus dropdown search input if a dropdown is open
+  if (state.openDropdownKey) {
+    requestAnimationFrame(() => {
+      const searchInput = document.querySelector(`[data-dropdown-search="${state.openDropdownKey}"]`);
+      if (searchInput) searchInput.focus();
+    });
+  }
+}
+
+// Focus the search input of the currently open dropdown
+function focusOpenDropdownSearch() {
+  if (state.openDropdownKey) {
+    requestAnimationFrame(() => {
+      const searchInput = document.querySelector(`[data-dropdown-search="${state.openDropdownKey}"]`);
+      if (searchInput) searchInput.focus();
+    });
+  }
+}
+
+// ========== DASHBOARD ==========
+function renderDashboard() {
+  const s = state.dashboardStats || {};
+  const alerts = s.lowStockAlerts || [];
+  const recent = s.recentActivity || [];
+
+  let alertsHTML = '';
+  if (alerts.length > 0) {
+    alertsHTML = `<div class="alert-box red">
+      <div class="alert-header">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--red-text)" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        <span class="alert-title">${t('lowStockAlert')}</span>
+      </div>
+      ${alerts.map(a => `<div class="alert-item"><span class="alert-item-name">${escHTML(a.needleType)}</span><span class="alert-item-value">${a.balance} PCS</span></div>`).join('')}
+    </div>`;
+  }
+
+  let recentHTML = '';
+  if (recent.length > 0) {
+    recentHTML = recent.map(p => `
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)">
+        <div style="flex:1;min-width:0">
+          <div style="font-size:13px;font-weight:500" class="truncate">${escHTML(p.needleType)}</div>
+          <div style="font-size:11px;color:var(--text-muted)">${escHTML(p.campusName)} - ${escHTML(p.floorName)}</div>
+        </div>
+        <div style="text-align:right;flex-shrink:0;margin-left:8px">
+          ${p.rcvd > 0 ? `<div style="font-size:13px;font-weight:700;color:var(--emerald-text)">+${p.rcvd}</div>` : ''}
+          ${p.dlvd > 0 ? `<div style="font-size:13px;font-weight:700;color:var(--orange-text)">-${p.dlvd}</div>` : ''}
+        </div>
+      </div>
+    `).join('');
+  } else {
+    recentHTML = `<div class="empty-state"><p style="font-size:13px">${t('noRecords')}</p></div>`;
+  }
+
+  return `<div class="space-y">
+    <div class="stat-grid">
+      <div class="stat-card">
+        <div class="stat-icon" style="background:var(--emerald-bg)">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--emerald-text)" stroke-width="2"><polyline points="23,6 13.5,15.5 8.5,10.5 1,18"/><polyline points="17,6 23,6 23,12"/></svg>
+        </div>
+        <div class="stat-label">${t('totalReceived')}</div>
+        <div class="stat-value">${s.totalReceived || 0}</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon" style="background:var(--orange-bg)">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--orange-text)" stroke-width="2"><polyline points="23,18 13.5,8.5 8.5,13.5 1,6"/><polyline points="17,18 23,18 23,12"/></svg>
+        </div>
+        <div class="stat-label">${t('totalDelivered')}</div>
+        <div class="stat-value">${s.totalDelivered || 0}</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon" style="background:var(--teal-bg)">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--teal-text)" stroke-width="2"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/></svg>
+        </div>
+        <div class="stat-label">${t('currentBalance')}</div>
+        <div class="stat-value">${s.currentBalance || 0}</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon" style="background:var(--violet-bg)">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--violet-text)" stroke-width="2"><polyline points="22,12 18,12 15,21 9,3 6,12 2,12"/></svg>
+        </div>
+        <div class="stat-label">${t('mostUsedNeedle')}</div>
+        <div class="stat-value-sm truncate">${s.mostUsedNeedle || '-'}</div>
+      </div>
+    </div>
+    ${alertsHTML}
+    <div class="card">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2"><polyline points="22,12 18,12 15,21 9,3 6,12 2,12"/></svg>
+        <span style="font-size:13px;font-weight:700">${t('recentActivity')}</span>
+      </div>
+      <div style="max-height:288px;overflow-y:auto">${recentHTML}</div>
+    </div>
+  </div>`;
+}
+
+// ========== NEW POSTING ==========
+function renderNewPosting() {
+  const fd = state.formData;
+  const balance = getCalculatedBalance();
+  const isLow = balance < 50;
+  const balanceClass = isLow ? 'low' : 'ok';
+
+  const campusOptions = (state.masterData?.campuses || []).map(c => c.name);
+  const campus = (state.masterData?.campuses || []).find(c => c.name === fd.campus);
+  const floorOptions = campus ? (campus.floors || []).map(f => f.name) : [];
+  const categoryOptions = (state.masterData?.categories || []).map(c => c.name);
+  const unitOptions = state.masterData?.units || ['PCS', 'BOX', 'SET', 'PACK'];
+  const needleTypeOptions = (state.masterData?.needleTypes || []).map(n => n.name);
+  const typeOptions = [{ value: 'Receiving', label: t('receiving') }, { value: 'Delivery', label: t('delivery') }];
+
+  let editBanner = '';
+  if (state.editingId) {
+    editBanner = `<div class="edit-banner">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--amber-text)" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+      <span class="edit-banner-text">${t('editingMode')}</span>
+      <button class="edit-banner-close" id="cancelEditBtn" type="button">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>`;
+  }
+
+  return `<div class="space-y">
+    ${editBanner}
+
+    <!-- Date and Week -->
+    <div class="form-grid">
+      <div class="form-group">
+        <label class="form-label">${t('date')} *</label>
+        <input type="date" class="form-input" id="formDate" value="${fd.date}">
+      </div>
+      <div class="form-group">
+        <label class="form-label">${t('week')}</label>
+        <input type="text" class="form-input" id="formWeek" value="${escHTML(fd.week)}" placeholder="W1">
+      </div>
+    </div>
+
+    <!-- Campus and Floor -->
+    <div class="form-grid">
+      ${dropdownHTML('campus', t('campusName'), fd.campus, campusOptions, t('selectCampus'), true)}
+      ${dropdownHTML('floor', t('floorName'), fd.floor, floorOptions, t('selectFloor'), true)}
+    </div>
+
+    <!-- Category and Unit -->
+    <div class="form-grid">
+      ${dropdownHTML('category', t('category'), fd.category, categoryOptions, t('selectCategory'))}
+      ${dropdownHTML('unit', t('unit'), fd.unit, unitOptions, t('selectUnit'))}
+    </div>
+
+    <!-- Type and Needle Type -->
+    <div class="form-grid">
+      ${dropdownHTML('type', t('type'), fd.type, typeOptions, t('selectType'), false, true)}
+      ${dropdownHTML('needleType', t('needleType'), fd.needleType, needleTypeOptions, t('selectNeedle'), true)}
+    </div>
+
+    <!-- Unit Price and Challan -->
+    <div class="form-grid">
+      <div class="form-group">
+        <label class="form-label">${t('unitPrice')}</label>
+        <input type="number" inputmode="decimal" class="form-input" id="formUnitPrice" value="${fd.unitPrice || ''}" placeholder="${t('enterPrice')}">
+      </div>
+      <div class="form-group">
+        <label class="form-label">${t('challanNo')}</label>
+        <input type="text" class="form-input" id="formChallanNo" value="${escHTML(fd.challanNo)}" placeholder="${t('enterChallan')}">
+      </div>
+    </div>
+
+    <!-- Previous BL, RCVD, DLVD -->
+    <div class="form-grid-3">
+      <div class="form-group">
+        <label class="form-label">${t('previousBL')}</label>
+        <input type="number" inputmode="numeric" class="form-input" id="formPrevBL" value="${fd.previousBL || ''}" style="text-align:center">
+      </div>
+      <div class="form-group">
+        <label class="form-label form-label-green">${t('rcvd')}</label>
+        <input type="number" inputmode="numeric" class="form-input form-input-green" id="formRcvd" value="${fd.rcvd || ''}">
+      </div>
+      <div class="form-group">
+        <label class="form-label form-label-orange">${t('dlvd')}</label>
+        <input type="number" inputmode="numeric" class="form-input form-input-orange" id="formDlvd" value="${fd.dlvd || ''}">
+      </div>
+    </div>
+
+    <!-- Balance Display -->
+    <div class="balance-box ${balanceClass}">
+      <div class="balance-header">
+        <span class="balance-label">${t('balance')}</span>
+        ${isLow && balance > 0 ? `<span class="balance-warning"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> ${t('lowStockWarning')}</span>` : ''}
+      </div>
+      <div class="balance-value ${balanceClass}">${balance}</div>
+      <div class="balance-calc">${fd.previousBL} + ${fd.rcvd} - ${fd.dlvd} = ${balance}</div>
+    </div>
+  </div>`;
+}
+
+// ========== HISTORY ==========
+function renderHistory() {
+  const f = state.filters;
+  const campusOpts = (state.masterData?.campuses || []).map(c => `<option value="${escHTML(c.name)}" ${f.campus === c.name ? 'selected' : ''}>${escHTML(c.name)}</option>`).join('');
+  const needleOpts = (state.masterData?.needleTypes || []).map(n => `<option value="${escHTML(n.name)}" ${f.needleType === n.name ? 'selected' : ''}>${escHTML(n.name)}</option>`).join('');
+
+  let listHTML = '';
+  if (state.loading) {
+    listHTML = '<div class="spinner"></div>';
+  } else if (state.postings.length === 0) {
+    listHTML = `<div class="empty-state">
+      <svg class="empty-icon" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12,6 12,12 16,14"/></svg>
+      <p style="font-size:13px">${t('noRecords')}</p>
+    </div>`;
+  } else {
+    listHTML = '<div class="space-y">' + state.postings.map(p => {
+      const balClass = p.balance < 50 ? 'red' : 'teal';
+      return `<div class="posting-card">
+        <div class="posting-header">
+          <div style="flex:1;min-width:0">
+            <div class="posting-title">${escHTML(p.needleType)}</div>
+            <div class="posting-subtitle">${escHTML(p.campusName)} - ${escHTML(p.floorName)}</div>
+          </div>
+          <div class="posting-actions">
+            <button class="posting-action-btn" data-edit="${p.id}" title="${t('edit')}">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            </button>
+            <button class="posting-action-btn danger" data-delete="${p.id}" title="${t('delete')}">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3,6 5,6 21,6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+            </button>
+          </div>
+        </div>
+        <div class="posting-stats">
+          <div class="posting-stat" style="background:var(--accent)">
+            <div class="posting-stat-label" style="color:var(--text-muted)">Prev BL</div>
+            <div class="posting-stat-value">${p.previousBL}</div>
+          </div>
+          <div class="posting-stat" style="background:var(--emerald-bg)">
+            <div class="posting-stat-label" style="color:var(--emerald-text)">${t('rcvd')}</div>
+            <div class="posting-stat-value" style="color:var(--emerald-text)">${p.rcvd}</div>
+          </div>
+          <div class="posting-stat" style="background:var(--orange-bg)">
+            <div class="posting-stat-label" style="color:var(--orange-text)">${t('dlvd')}</div>
+            <div class="posting-stat-value" style="color:var(--orange-text)">${p.dlvd}</div>
+          </div>
+          <div class="posting-stat" style="background:var(--${balClass}-bg)">
+            <div class="posting-stat-label" style="color:var(--${balClass}-text)">Balance</div>
+            <div class="posting-stat-value" style="color:var(--${balClass}-text)">${p.balance}</div>
+          </div>
+        </div>
+        <div class="posting-footer">
+          <span>${p.date} | ${p.week}</span>
+          <span>Challan: ${p.challanNo || '-'}</span>
+        </div>
+      </div>`;
+    }).join('') + '</div>';
+  }
+
+  return `<div class="space-y">
+    <div class="card filter-card">
+      <div class="filter-header">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2"><polygon points="22,3 2,3 10,12.46 10,19 14,21 14,12.46"/></svg>
+        <span style="font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase">${t('filterBy')}</span>
+        <button class="filter-clear" id="clearFilters">${t('clear')}</button>
+      </div>
+      <div class="filter-grid">
+        <input type="date" class="filter-input" id="filterDate" value="${f.date}">
+        <select class="filter-input" id="filterCampus">
+          <option value="">${t('allCampuses')}</option>
+          ${campusOpts}
+        </select>
+        <select class="filter-input" id="filterNeedle">
+          <option value="">${t('allNeedles')}</option>
+          ${needleOpts}
+        </select>
+        <input type="text" class="filter-input" id="filterChallan" value="${escHTML(f.challanNo)}" placeholder="${t('searchChallan')}">
+      </div>
+    </div>
+    ${listHTML}
+  </div>`;
+}
+
+// ========== REPORTS ==========
+function renderReports() {
+  const reportTypes = [
+    { key: 'daily', label: t('dailyReport'), icon: '📅' },
+    { key: 'weekly', label: t('weeklyReport'), icon: '📆' },
+    { key: 'monthly', label: t('monthlyReport'), icon: '🗓️' },
+    { key: 'consumption', label: t('consumptionReport'), icon: '📊' },
+    { key: 'floor', label: t('floorWiseReport'), icon: '🏭' },
+    { key: 'campus', label: t('campusWiseReport'), icon: '🏢' },
+  ];
+
+  const filteredData = state.postings.filter(p => {
+    const pDate = new Date(p.date);
+    const from = new Date(state.reportFromDate);
+    const to = new Date(state.reportToDate);
+    to.setHours(23, 59, 59, 999);
+    return pDate >= from && pDate <= to;
+  });
+
+  const totalR = filteredData.reduce((s, p) => s + (p.rcvd || 0), 0);
+  const totalD = filteredData.reduce((s, p) => s + (p.dlvd || 0), 0);
+  const totalB = filteredData.reduce((s, p) => s + (p.balance || 0), 0);
+
+  let groupHTML = '';
+  if (state.reportType === 'floor' || state.reportType === 'campus') {
+    const grouped = {};
+    filteredData.forEach(p => {
+      const key = state.reportType === 'floor' ? p.floorName : p.campusName;
+      if (!grouped[key]) grouped[key] = { rcvd: 0, dlvd: 0, balance: 0 };
+      grouped[key].rcvd += p.rcvd; grouped[key].dlvd += p.dlvd; grouped[key].balance += p.balance;
+    });
+    groupHTML = Object.entries(grouped).map(([name, d]) =>
+      `<div style="display:flex;justify-content:space-between;font-size:11px;padding:4px 0;border-bottom:1px solid var(--border)">
+        <span style="font-weight:500">${escHTML(name)}</span>
+        <span style="color:var(--text-muted)">R:${d.rcvd} D:${d.dlvd} B:${d.balance}</span>
+      </div>`
+    ).join('');
+  }
+
+  return `<div class="space-y">
+    <div class="card">
+      <label class="form-label mb-2" style="display:block">${t('reportType')}</label>
+      <div class="report-type-grid">
+        ${reportTypes.map(r => `<button class="report-type-btn ${state.reportType === r.key ? 'active' : ''}" data-report-type="${r.key}">${r.icon} ${r.label}</button>`).join('')}
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">${t('from')}</label>
+          <input type="date" class="form-input" id="reportFrom" value="${state.reportFromDate}">
+        </div>
+        <div class="form-group">
+          <label class="form-label">${t('to')}</label>
+          <input type="date" class="form-input" id="reportTo" value="${state.reportToDate}">
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3 style="font-size:13px;font-weight:700;margin-bottom:10px">${t('reportSummary')} (${filteredData.length} ${t('entries')})</h3>
+      ${filteredData.length > 0 ? `
+        <div class="report-summary-grid">
+          <div style="background:var(--emerald-bg);border-radius:8px;padding:8px">
+            <div style="font-size:10px;color:var(--text-muted)">${t('totalReceived')}</div>
+            <div style="font-size:14px;font-weight:700;color:var(--emerald-text)">${totalR}</div>
+          </div>
+          <div style="background:var(--orange-bg);border-radius:8px;padding:8px">
+            <div style="font-size:10px;color:var(--text-muted)">${t('totalDelivered')}</div>
+            <div style="font-size:14px;font-weight:700;color:var(--orange-text)">${totalD}</div>
+          </div>
+          <div style="background:var(--teal-bg);border-radius:8px;padding:8px">
+            <div style="font-size:10px;color:var(--text-muted)">${t('currentBalance')}</div>
+            <div style="font-size:14px;font-weight:700;color:var(--teal-text)">${totalB}</div>
+          </div>
+        </div>
+        ${groupHTML ? `<div style="margin-top:8px">${groupHTML}</div>` : ''}
+      ` : `<div class="empty-state"><p style="font-size:13px">${t('noRecords')}</p></div>`}
+    </div>
+
+    <div class="export-grid">
+      <button class="export-btn excel" id="exportExcelBtn">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7,10 12,15 17,10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        ${t('exportExcel')}
+      </button>
+      <button class="export-btn pdf" id="exportPDFBtn">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14,2 14,8 20,8"/></svg>
+        ${t('exportPDF')}
+      </button>
+      <button class="export-btn print" id="printBtn">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6,9 6,2 18,2 18,9"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+        ${t('print')}
+      </button>
+    </div>
+  </div>`;
+}
+
+// ========== SETTINGS ==========
+function renderExistingItems() {
+  const field = state.bulkAddField;
+  const filter = (state.bulkSearchFilter || '').toLowerCase();
+  let items = [];
+
+  if (field === 'campuses') {
+    items = (state.masterData?.campuses || []).map(c => ({ id: c.id, name: c.name, sub: '', fbPath: 'campuses' }));
+  } else if (field === 'floors') {
+    items = (state.masterData?.floors || []).map(f => {
+      const campus = (state.masterData?.campuses || []).find(c => c.id === f.campusId);
+      return { id: f.id, name: f.name, sub: campus ? campus.name : '', fbPath: 'floors' };
+    });
+  } else if (field === 'categories') {
+    items = (state.masterData?.categories || []).map(c => ({ id: c.id, name: c.name, sub: '', fbPath: 'categories' }));
+  } else if (field === 'units') {
+    items = (state.masterData?.units || []).map((u, i) => ({ id: `unit-${i}`, name: u, sub: '', fbPath: 'units', isUnit: true }));
+  } else if (field === 'types') {
+    items = (state.masterData?.needleTypes || []).map(n => ({ id: n.id, name: n.name, sub: n.category || '', fbPath: 'needleTypes' }));
+  } else if (field === 'needleTypes') {
+    items = (state.masterData?.needleTypes || []).map(n => ({ id: n.id, name: n.name, sub: n.category || '', fbPath: 'needleTypes' }));
+  }
+
+  // Apply search filter
+  if (filter) {
+    items = items.filter(i => i.name.toLowerCase().includes(filter) || i.sub.toLowerCase().includes(filter));
+  }
+
+  if (items.length === 0) {
+    return `<div style="text-align:center;padding:12px;font-size:12px;color:var(--text-muted)">${t('noItemsYet')}</div>`;
+  }
+
+  return items.map(item => `
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:6px 4px;border-bottom:1px solid var(--border);gap:6px" data-item-row="${item.id}">
+      <div style="flex:1;min-width:0">
+        <div style="font-size:12px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escHTML(item.name)}</div>
+        ${item.sub ? `<div style="font-size:10px;color:var(--text-muted)">${escHTML(item.sub)}</div>` : ''}
+      </div>
+      <button class="bulk-delete-item-btn" data-delete-item="${item.id}" data-delete-path="${item.fbPath}" data-is-unit="${item.isUnit ? '1' : '0'}" data-item-name="${escHTML(item.name)}"
+        style="padding:4px 6px;border-radius:6px;border:1px solid var(--red-border);background:var(--red-bg);color:var(--red-text);font-size:10px;cursor:pointer;flex-shrink:0;min-height:28px">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3,6 5,6 21,6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+      </button>
+    </div>
+  `).join('');
+}
+
+function renderSettings() {
+  const bulkFields = [
+    { key: 'campuses', label: t('campus') },
+    { key: 'floors', label: t('floor') },
+    { key: 'categories', label: t('cat') },
+    { key: 'units', label: t('u') },
+    { key: 'types', label: t('tp') },
+    { key: 'needleTypes', label: t('nt') },
+  ];
+
+  let currentCount = 0;
+  if (state.bulkAddField === 'campuses') currentCount = state.masterData?.campuses?.length || 0;
+  else if (state.bulkAddField === 'floors') currentCount = state.masterData?.floors?.length || 0;
+  else if (state.bulkAddField === 'categories') currentCount = state.masterData?.categories?.length || 0;
+  else if (state.bulkAddField === 'units') currentCount = state.masterData?.units?.length || 0;
+  else currentCount = state.masterData?.needleTypes?.length || 0;
+
+  let priceListHTML = '';
+  if (state.needlePrices.length === 0) {
+    priceListHTML = `<div class="text-center" style="padding:16px"><p class="text-xs text-muted">${t('loadFirst')}</p></div>`;
+  } else {
+    priceListHTML = state.needlePrices.map(np => {
+      const isEditing = state.editingPriceId === np.id;
+      if (isEditing) {
+        return `<div class="price-row">
+          <div class="price-name"><div class="price-name-text">${escHTML(np.needleType)}</div><div class="price-name-cat">${escHTML(np.category)}</div></div>
+          <div class="price-actions">
+            <input type="number" inputmode="decimal" class="price-edit-input" id="priceEditInput" value="${np.unitPrice}" data-price-id="${np.id}" autofocus>
+            <button class="price-save-btn" data-save-price="${np.id}" data-needle-type="${escHTML(np.needleType)}">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20,6 9,17 4,12"/></svg>
+            </button>
+            <button class="price-cancel-btn" data-cancel-price="1">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+          </div>
+        </div>`;
+      }
+      return `<div class="price-row">
+        <div class="price-name"><div class="price-name-text">${escHTML(np.needleType)}</div><div class="price-name-cat">${escHTML(np.category)}</div></div>
+        <div class="price-actions">
+          <span class="price-value">${np.unitPrice} ৳</span>
+          <button class="price-edit-btn" data-edit-price="${np.id}" data-current-price="${np.unitPrice}">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 3a2.828 2.828 0 114 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>
+          </button>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  return `<div class="space-y">
+    <!-- Theme -->
+    <div class="card">
+      <div class="setting-row">
+        <div style="display:flex;align-items:center;gap:10px">
+          <span style="font-size:20px">${state.darkMode ? '🌙' : '☀️'}</span>
+          <div>
+            <div style="font-size:13px;font-weight:500">${state.darkMode ? t('darkMode') : t('lightMode')}</div>
+            <div style="font-size:11px;color:var(--text-muted)">${state.language === 'bn' ? 'থিম পরিবর্তন করুন' : 'Toggle appearance'}</div>
+          </div>
+        </div>
+        <button class="toggle-track ${state.darkMode ? 'on' : 'off'}" id="themeToggleSwitch">
+          <span class="toggle-thumb"></span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Language -->
+    <div class="card">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+        <span style="font-size:20px">🌐</span>
+        <div>
+          <div style="font-size:13px;font-weight:500">${t('language')}</div>
+          <div style="font-size:11px;color:var(--text-muted)">${state.language === 'bn' ? 'ভাষা নির্বাচন করুন' : 'Select language'}</div>
+        </div>
+      </div>
+      <div class="lang-grid">
+        <button class="lang-btn ${state.language === 'en' ? 'active' : ''}" data-lang="en">English</button>
+        <button class="lang-btn ${state.language === 'bn' ? 'active' : ''}" data-lang="bn">বাংলা</button>
+      </div>
+    </div>
+
+    <!-- Firebase Seed -->
+    <div class="card">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+        <span style="font-size:20px">🔄</span>
+        <div>
+          <div style="font-size:13px;font-weight:500">${t('loadFirebase')}</div>
+          <div style="font-size:11px;color:var(--text-muted)">${t('loadFirebaseDesc')}</div>
+        </div>
+      </div>
+      <button class="seed-btn" id="seedFirebaseBtn">${t('loadData')}</button>
+    </div>
+
+    <!-- Bulk Add -->
+    <div class="card">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+        <span style="font-size:13px;font-weight:700">${t('bulkAddTitle')}</span>
+      </div>
+      <p style="font-size:11px;color:var(--text-muted);margin-bottom:10px">${t('bulkAddDesc')}</p>
+      <div class="bulk-field-grid">
+        ${bulkFields.map(f => `<button class="bulk-field-btn ${state.bulkAddField === f.key ? 'active' : ''}" data-bulk-field="${f.key}">${f.label}</button>`).join('')}
+      </div>
+
+      ${state.bulkAddField === 'floors' ? `
+      <div style="margin-bottom:10px">
+        <label class="form-label">${t('selectCampusForFloor')} *</label>
+        <select class="form-input" id="bulkFloorCampus">
+          <option value="">${t('selectCampus')}</option>
+          ${(state.masterData?.campuses || []).map(c => `<option value="${c.id}" ${state.bulkFloorCampusId === c.id ? 'selected' : ''}>${escHTML(c.name)}</option>`).join('')}
+        </select>
+      </div>
+      ` : ''}
+
+      <textarea class="bulk-textarea" id="bulkAddText" placeholder="${t('exampleItems')}">${escHTML(state.bulkAddText)}</textarea>
+      <button class="bulk-add-btn" id="bulkAddBtn">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+        ${t('bulkAdd')}
+      </button>
+
+      <!-- Existing Items List -->
+      <div style="margin-top:14px;border-top:1px solid var(--border);padding-top:12px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+          <span style="font-size:12px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em">${t('existingItems')} (${currentCount})</span>
+        </div>
+        <input type="text" class="form-input" id="bulkSearchFilter" value="${escHTML(state.bulkSearchFilter)}" placeholder="${t('searchItems')}" style="margin-bottom:8px;font-size:12px;min-height:36px;padding:6px 10px">
+        <div style="max-height:200px;overflow-y:auto" id="existingItemsList">
+          ${renderExistingItems()}
+        </div>
+      </div>
+    </div>
+
+    <!-- Needle Price Master -->
+    <div class="card">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/></svg>
+        <span style="font-size:13px;font-weight:700">${t('needlePriceMaster')}</span>
+        <span style="font-size:11px;color:var(--text-muted);margin-left:auto">${t('setRate')}</span>
+      </div>
+      <div style="max-height:384px;overflow-y:auto">${priceListHTML}</div>
+    </div>
+
+    <!-- About -->
+    <div class="card text-center">
+      <p style="font-size:13px;font-weight:700">${t('appName')}</p>
+      <p style="font-size:11px;color:var(--text-muted);margin-top:4px">v2.0.0 - Firebase</p>
+      <p style="font-size:11px;color:var(--text-muted)">${t('about')}</p>
+    </div>
+  </div>`;
+}
+
+// ========== EVENT BINDING ==========
+function bindTabEvents() {
+  // Date change
+  const dateInput = document.getElementById('formDate');
+  if (dateInput) {
+    dateInput.addEventListener('change', e => {
+      state.formData.date = e.target.value;
+      state.formData.week = calcWeek(e.target.value);
+      document.getElementById('formWeek').value = state.formData.week;
+    });
+  }
+
+  // Number inputs - live balance
+  const prevBLInput = document.getElementById('formPrevBL');
+  const rcvdInput = document.getElementById('formRcvd');
+  const dlvdInput = document.getElementById('formDlvd');
+  const unitPriceInput = document.getElementById('formUnitPrice');
+  const challanInput = document.getElementById('formChallanNo');
+
+  function updateBalance() {
+    const prevBL = parseFloat(prevBLInput?.value) || 0;
+    const rcvd = parseFloat(rcvdInput?.value) || 0;
+    const dlvd = parseFloat(dlvdInput?.value) || 0;
+    state.formData.previousBL = prevBL;
+    state.formData.rcvd = rcvd;
+    state.formData.dlvd = dlvd;
+    updateBalanceDisplay();
+  }
+
+  // Global function to update balance display without reading inputs
+  window.updateBalanceDisplay = function() {
+    const prevBL = state.formData.previousBL || 0;
+    const rcvd = state.formData.rcvd || 0;
+    const dlvd = state.formData.dlvd || 0;
+    const balance = prevBL + rcvd - dlvd;
+    const isLow = balance < 50;
+    const balBox = document.querySelector('.balance-box');
+    const balValue = document.querySelector('.balance-value');
+    const balCalc = document.querySelector('.balance-calc');
+    if (balBox) { balBox.className = `balance-box ${isLow ? 'low' : 'ok'}`; }
+    if (balValue) { balValue.className = `balance-value ${isLow ? 'low' : 'ok'}`; balValue.textContent = balance; }
+    if (balCalc) { balCalc.textContent = `${prevBL} + ${rcvd} - ${dlvd} = ${balance}`; }
+  };
+
+  [prevBLInput, rcvdInput, dlvdInput].forEach(input => {
+    if (input) input.addEventListener('input', updateBalance);
+  });
+
+  if (unitPriceInput) unitPriceInput.addEventListener('input', e => { state.formData.unitPrice = parseFloat(e.target.value) || 0; });
+  if (challanInput) challanInput.addEventListener('input', e => { state.formData.challanNo = e.target.value; });
+
+  // Cancel edit
+  const cancelBtn = document.getElementById('cancelEditBtn');
+  if (cancelBtn) cancelBtn.addEventListener('click', () => {
+    state.editingId = null;
+    state.formData = { date: new Date().toISOString().split('T')[0], week: calcWeek(new Date().toISOString().split('T')[0]), campus: '', floor: '', category: '', unit: '', type: '', needleType: '', unitPrice: 0, challanNo: '', previousBL: 0, rcvd: 0, dlvd: 0 };
+    renderTab();
+  });
+
+  // Dropdown toggle
+  document.querySelectorAll('[data-dropdown-toggle]').forEach(btn => {
+    btn.addEventListener('click', e => {
+      e.stopPropagation();
+      // Sync current form values to state before re-rendering
+      syncFormToState();
+      const key = btn.dataset.dropdownToggle;
+      if (state.openDropdownKey === key) {
+        state.openDropdownKey = null;
+      } else {
+        state.openDropdownKey = key;
+      }
+      renderTab();
+    });
+  });
+
+  // Prevent clicks inside dropdown menus from closing the dropdown
+  document.querySelectorAll('.dropdown-menu').forEach(menu => {
+    menu.addEventListener('click', e => e.stopPropagation());
+  });
+
+  // Dropdown search
+  document.querySelectorAll('[data-dropdown-search]').forEach(input => {
+    // Prevent clicks in search from closing the dropdown
+    input.addEventListener('click', e => e.stopPropagation());
+    input.addEventListener('input', e => {
+      const key = e.target.dataset.dropdownSearch;
+      const searchVal = e.target.value.toLowerCase();
+      const optionsContainer = document.getElementById(`dropdown-options-${key}`);
+      if (!optionsContainer) return;
+      const options = optionsContainer.querySelectorAll('.dropdown-option');
+      let anyVisible = false;
+      options.forEach(opt => {
+        const text = opt.textContent.toLowerCase();
+        const visible = text.includes(searchVal);
+        opt.style.display = visible ? '' : 'none';
+        if (visible) anyVisible = true;
+      });
+      const emptyEl = optionsContainer.querySelector('.dropdown-empty');
+      if (emptyEl) emptyEl.style.display = anyVisible ? 'none' : '';
+    });
+  });
+
+  // Dropdown select
+  document.querySelectorAll('[data-dropdown-select]').forEach(btn => {
+    btn.addEventListener('click', e => {
+      e.stopPropagation();
+      const key = btn.dataset.dropdownSelect;
+      const value = btn.dataset.value;
+      state.formData[key] = value;
+      state.openDropdownKey = null;
+
+      if (key === 'campus') state.formData.floor = '';
+      if (key === 'needleType') autofillFromNeedleType(value);
+
+      renderTab();
+
+      // Focus search input if dropdown was open
+      focusOpenDropdownSearch();
+
+      // Fetch previous balance
+      if (['needleType', 'campus', 'floor'].includes(key)) {
+        fetchPrevBalance().then(() => {
+          if (state.activeTab === 'newPosting') {
+            const prevInput = document.getElementById('formPrevBL');
+            if (prevInput) prevInput.value = state.formData.previousBL || '';
+            const upInput = document.getElementById('formUnitPrice');
+            if (upInput) upInput.value = state.formData.unitPrice || '';
+            if (window.updateBalanceDisplay) window.updateBalanceDisplay();
+          }
+        });
+      }
+    });
+  });
+
+  // Click outside to close dropdown (remove old handler first to prevent duplicates)
+  if (window._dropdownClickOutside) document.removeEventListener('click', window._dropdownClickOutside);
+  window._dropdownClickOutside = function(e) {
+    if (state.openDropdownKey && !e.target.closest('.dropdown-wrapper')) {
+      syncFormToState();
+      state.openDropdownKey = null;
+      renderTab();
+    }
+  };
+  document.addEventListener('click', window._dropdownClickOutside);
+
+  // History filters
+  const filterDate = document.getElementById('filterDate');
+  const filterCampus = document.getElementById('filterCampus');
+  const filterNeedle = document.getElementById('filterNeedle');
+  const filterChallan = document.getElementById('filterChallan');
+  const clearFilters = document.getElementById('clearFilters');
+
+  if (filterDate) filterDate.addEventListener('change', e => { state.filters.date = e.target.value; fetchPostings().then(renderTab); });
+  if (filterCampus) filterCampus.addEventListener('change', e => { state.filters.campus = e.target.value; fetchPostings().then(renderTab); });
+  if (filterNeedle) filterNeedle.addEventListener('change', e => { state.filters.needleType = e.target.value; fetchPostings().then(renderTab); });
+  if (filterChallan) filterChallan.addEventListener('input', e => { state.filters.challanNo = e.target.value; fetchPostings().then(renderTab); });
+  if (clearFilters) clearFilters.addEventListener('click', () => {
+    state.filters = { date: '', needleType: '', floor: '', campus: '', challanNo: '' };
+    fetchPostings().then(renderTab);
+  });
+
+  // Edit/Delete posting
+  document.querySelectorAll('[data-edit]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const posting = state.postings.find(p => p.id === btn.dataset.edit);
+      if (!posting) return;
+      state.editingId = posting.id;
+      state.formData = {
+        date: posting.date, week: posting.week, campus: posting.campusName || posting.campus,
+        floor: posting.floorName || posting.floor, category: posting.category, unit: posting.unit,
+        type: posting.type, needleType: posting.needleType, unitPrice: posting.unitPrice,
+        challanNo: posting.challanNo, previousBL: posting.previousBL, rcvd: posting.rcvd, dlvd: posting.dlvd,
+      };
+      state.activeTab = 'newPosting';
+      renderTab();
+    });
+  });
+
+  document.querySelectorAll('[data-delete]').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      if (!confirm(t('confirmDelete'))) return;
+      await fbDelete(`postings/${btn.dataset.delete}`);
+      showToast(t('deleteSuccess'), 'success');
+      await fetchPostings();
+      renderTab();
+    });
+  });
+
+  // Report type buttons
+  document.querySelectorAll('[data-report-type]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      state.reportType = btn.dataset.reportType;
+      renderTab();
+    });
+  });
+
+  const reportFrom = document.getElementById('reportFrom');
+  const reportTo = document.getElementById('reportTo');
+  if (reportFrom) reportFrom.addEventListener('change', e => { state.reportFromDate = e.target.value; renderTab(); });
+  if (reportTo) reportTo.addEventListener('change', e => { state.reportToDate = e.target.value; renderTab(); });
+
+  // Export Excel (CSV)
+  const exportExcel = document.getElementById('exportExcelBtn');
+  if (exportExcel) exportExcel.addEventListener('click', handleExportCSV);
+
+  // Export PDF / Print
+  const exportPDF = document.getElementById('exportPDFBtn');
+  const printBtn = document.getElementById('printBtn');
+  if (exportPDF) exportPDF.addEventListener('click', () => window.print());
+  if (printBtn) printBtn.addEventListener('click', () => window.print());
+
+  // Settings - Theme toggle switch
+  const themeSwitch = document.getElementById('themeToggleSwitch');
+  if (themeSwitch) themeSwitch.addEventListener('click', () => {
+    state.darkMode = !state.darkMode;
+    applyTheme();
+    renderTab();
+  });
+
+  // Settings - Language buttons
+  document.querySelectorAll('[data-lang]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      state.language = btn.dataset.lang;
+      applyLanguage();
+    });
+  });
+
+  // Settings - Firebase Seed
+  const seedBtn = document.getElementById('seedFirebaseBtn');
+  if (seedBtn) seedBtn.addEventListener('click', handleSeedFirebase);
+
+  // Settings - Bulk add field buttons
+  document.querySelectorAll('[data-bulk-field]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      state.bulkAddField = btn.dataset.bulkField;
+      renderTab();
+    });
+  });
+
+  // Settings - Bulk add textarea
+  const bulkText = document.getElementById('bulkAddText');
+  if (bulkText) bulkText.addEventListener('input', e => { state.bulkAddText = e.target.value; });
+
+  // Settings - Bulk add button
+  const bulkAddBtn = document.getElementById('bulkAddBtn');
+  if (bulkAddBtn) bulkAddBtn.addEventListener('click', handleBulkAdd);
+
+  // Settings - Bulk floor campus selector
+  const bulkFloorCampus = document.getElementById('bulkFloorCampus');
+  if (bulkFloorCampus) bulkFloorCampus.addEventListener('change', e => {
+    state.bulkFloorCampusId = e.target.value;
+  });
+
+  // Settings - Bulk search filter
+  const bulkSearchFilter = document.getElementById('bulkSearchFilter');
+  if (bulkSearchFilter) bulkSearchFilter.addEventListener('input', e => {
+    state.bulkSearchFilter = e.target.value;
+    const list = document.getElementById('existingItemsList');
+    if (list) list.innerHTML = renderExistingItems();
+    bindBulkDeleteButtons();
+  });
+
+  // Settings - Bulk delete item buttons
+  bindBulkDeleteButtons();
+
+  // Settings - Price edit
+  document.querySelectorAll('[data-edit-price]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      state.editingPriceId = btn.dataset.editPrice;
+      state.editPriceValue = parseFloat(btn.dataset.currentPrice) || 0;
+      renderTab();
+      // Focus the input
+      const editInput = document.getElementById('priceEditInput');
+      if (editInput) editInput.focus();
+    });
+  });
+
+  document.querySelectorAll('[data-save-price]').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const editInput = document.getElementById('priceEditInput');
+      const newPrice = parseFloat(editInput?.value) || 0;
+      const needleType = btn.dataset.needleType;
+      const priceId = btn.dataset.savePrice;
+      const priceEntry = state.needlePrices.find(p => p.id === priceId);
+
+      // Update in Firebase
+      await fbPush('needlePriceMaster', {
+        needleType, unitPrice: newPrice, unit: priceEntry?.unit || 'PCS',
+        category: priceEntry?.category || '',
+        createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(),
+      });
+
+      showToast(t('rateUpdated'), 'success');
+      state.editingPriceId = null;
+      await fetchMasterData();
+      renderTab();
+    });
+  });
+
+  document.querySelectorAll('[data-cancel-price]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      state.editingPriceId = null;
+      renderTab();
+    });
+  });
+}
+
+// ========== EXPORT CSV ==========
+function handleExportCSV() {
+  const headers = ['DATE', 'WEEK', 'CAMPUS NAME', 'FLOOR NAME / LOCATION', 'CATEGORY', 'UNIT', 'TYPE', 'NEEDLE TYPE', 'UNIT PRICE', 'CHALLAN NO', 'PREVIOUS BL', 'RCVD', 'DLVD'];
+
+  const filteredData = state.postings.filter(p => {
+    const pDate = new Date(p.date);
+    const from = new Date(state.reportFromDate);
+    const to = new Date(state.reportToDate);
+    to.setHours(23, 59, 59, 999);
+    return pDate >= from && pDate <= to;
+  });
+
+  const rows = filteredData.map(p => [
+    p.date, p.week, p.campusName, p.floorName, p.category,
+    p.unit, p.type, p.needleType, p.unitPrice, p.challanNo,
+    p.previousBL, p.rcvd, p.dlvd
+  ]);
+
+  const csv = [headers, ...rows].map(r =>
+    r.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(',')
+  ).join('\n');
+
+  const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `needle-report-${state.reportType}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast(state.language === 'bn' ? 'রপ্তানি সফল' : 'Export successful', 'success');
+}
+
+// ========== SEED FIREBASE ==========
+async function handleSeedFirebase() {
+  try {
+    const existing = await fbGet('campuses');
+    if (existing) {
+      showToast(t('alreadySeeded'), 'info');
+      await fetchMasterData();
+      renderTab();
+      return;
+    }
+
+    // Seed campuses
+    const campuses = ['Main Campus', 'Unit-2 Campus', 'Unit-3 Campus', 'Washing Plant', 'Head Office'];
+    for (const name of campuses) await fbPush('campuses', { name });
+
+    // Seed floors
+    const campusData = fbToArray(await fbGet('campuses'));
+    const floorData = [
+      { name: '1st Floor', campusName: 'Main Campus' }, { name: '2nd Floor', campusName: 'Main Campus' },
+      { name: '3rd Floor', campusName: 'Main Campus' }, { name: '4th Floor', campusName: 'Main Campus' },
+      { name: '5th Floor', campusName: 'Main Campus' }, { name: '1st Floor', campusName: 'Unit-2 Campus' },
+      { name: '2nd Floor', campusName: 'Unit-2 Campus' }, { name: '3rd Floor', campusName: 'Unit-2 Campus' },
+      { name: '1st Floor', campusName: 'Unit-3 Campus' }, { name: '2nd Floor', campusName: 'Unit-3 Campus' },
+      { name: 'Ground Floor', campusName: 'Washing Plant' }, { name: '1st Floor', campusName: 'Washing Plant' },
+      { name: '2nd Floor', campusName: 'Head Office' }, { name: '3rd Floor', campusName: 'Head Office' },
+      { name: 'Store Room', campusName: 'Main Campus' }, { name: 'Store Room', campusName: 'Unit-2 Campus' },
+    ];
+    for (const f of floorData) {
+      const campus = campusData.find(c => c.name === f.campusName);
+      if (campus) await fbPush('floors', { name: f.name, campusId: campus.id });
+    }
+
+    // Seed categories
+    const categories = ['Sewing Needle', 'Overlock Needle', 'Flatlock Needle', 'Button Hole Needle', 'Bar Tack Needle', 'Blind Stitch Needle', 'Feed-off Needle', 'Zigzag Needle', 'Cutting Needle', 'Special Needle'];
+    for (const name of categories) await fbPush('categories', { name });
+
+    // Seed needle types with prices
+    const needlePrices = [
+      { needleType: 'DB X 1 # 7 -ORGAN', unitPrice: 6, unit: 'PCS', category: 'Sewing Needle' },
+      { needleType: 'DB X 1 # 8 -ORGAN', unitPrice: 6, unit: 'PCS', category: 'Sewing Needle' },
+      { needleType: 'DB X 1  # 9 -ORGAN', unitPrice: 6, unit: 'PCS', category: 'Sewing Needle' },
+      { needleType: 'DB X 1 # 11 -ORGAN', unitPrice: 6, unit: 'PCS', category: 'Sewing Needle' },
+      { needleType: 'DB X 1 # 12 -ORGAN', unitPrice: 6, unit: 'PCS', category: 'Sewing Needle' },
+      { needleType: 'DB X 1 SAN 10  # 7 -GROZ(FFG)', unitPrice: 10, unit: 'PCS', category: 'Sewing Needle' },
+      { needleType: 'DB X 1 SF  # 8 -ORGAN', unitPrice: 7, unit: 'PCS', category: 'Sewing Needle' },
+      { needleType: 'DB X 1-SF # 9 -ORGAN', unitPrice: 7, unit: 'PCS', category: 'Sewing Needle' },
+      { needleType: 'DB X 1 # 10 -ORGAN', unitPrice: 6, unit: 'PCS', category: 'Sewing Needle' },
+      { needleType: 'DB X 1 # 12 -GROZ(FFG)', unitPrice: 10, unit: 'PCS', category: 'Sewing Needle' },
+      { needleType: 'DB X K5 KK # 10 -GROZ(FFG)', unitPrice: 12, unit: 'PCS', category: 'Sewing Needle' },
+      { needleType: 'DB X 1 # 14 -GROZ(FFG)', unitPrice: 11, unit: 'PCS', category: 'Sewing Needle' },
+      { needleType: 'DB X 1 # 14 -GROZ(GEBEDUR)', unitPrice: 13, unit: 'PCS', category: 'Sewing Needle' },
+      { needleType: 'DB X 1 KN   # 9LP -ORGAN', unitPrice: 8, unit: 'PCS', category: 'Sewing Needle' },
+      { needleType: 'DB X 1 KN # 8 LP -ORGAN', unitPrice: 8, unit: 'PCS', category: 'Sewing Needle' },
+      { needleType: 'DB X 1-GEBEDURE-FFG ,NO-08,GROZ', unitPrice: 14, unit: 'PCS', category: 'Sewing Needle' },
+      { needleType: 'DB X K 5 KK # 9 -ORGAN', unitPrice: 9, unit: 'PCS', category: 'Sewing Needle' },
+      { needleType: 'DB X 1 SPD/SPD+ # 8 -ORGAN', unitPrice: 8, unit: 'PCS', category: 'Sewing Needle' },
+      { needleType: 'DB X 1-KN # 9 -ORGAN', unitPrice: 8, unit: 'PCS', category: 'Sewing Needle' },
+      { needleType: 'DB X 1 KN # 11 LP -ORGAN', unitPrice: 8, unit: 'PCS', category: 'Sewing Needle' },
+      { needleType: 'DB X K5 KK # 11 -ORGAN', unitPrice: 9, unit: 'PCS', category: 'Sewing Needle' },
+      { needleType: 'DB X 1 SPD/SPD+ # 7 -ORGAN', unitPrice: 8, unit: 'PCS', category: 'Sewing Needle' },
+      { needleType: 'DB X 1 NS,NO-LP', unitPrice: 7, unit: 'PCS', category: 'Sewing Needle' },
+      { needleType: 'DB X 1 KN,NO-08,ORGAN', unitPrice: 8, unit: 'PCS', category: 'Sewing Needle' },
+      { needleType: 'DB X 1 KN PD # 8 -ORGAN', unitPrice: 8, unit: 'PCS', category: 'Sewing Needle' },
+      { needleType: 'DB X 1 SAN 10  # 9 -GROZ(FFG)', unitPrice: 11, unit: 'PCS', category: 'Sewing Needle' },
+      { needleType: 'DB X 1 # 8 -GROZ(FFG)', unitPrice: 10, unit: 'PCS', category: 'Sewing Needle' },
+      { needleType: 'DB X 5-K  # 11 -ORGAN', unitPrice: 9, unit: 'PCS', category: 'Sewing Needle' },
+      { needleType: 'DC X 1 # 8 -ORGAN', unitPrice: 7, unit: 'PCS', category: 'Sewing Needle' },
+      { needleType: 'DC X 1 # 9 -ORGAN', unitPrice: 7, unit: 'PCS', category: 'Sewing Needle' },
+      { needleType: 'DC X 1 # 11 -ORGAN', unitPrice: 7, unit: 'PCS', category: 'Sewing Needle' },
+      { needleType: 'DC X 1 27 SAN 10   # 10 -GROZ(FFG)', unitPrice: 12, unit: 'PCS', category: 'Sewing Needle' },
+      { needleType: 'DC X 1 # 7 -ORGAN', unitPrice: 7, unit: 'PCS', category: 'Sewing Needle' },
+      { needleType: 'DC X 1-KN # 8 LP -ORGAN', unitPrice: 9, unit: 'PCS', category: 'Sewing Needle' },
+      { needleType: 'DC X 1-SF # 8 -ORGAN', unitPrice: 8, unit: 'PCS', category: 'Sewing Needle' },
+      { needleType: 'DC X 1 SF # 9 -ORGAN', unitPrice: 8, unit: 'PCS', category: 'Sewing Needle' },
+      { needleType: 'DC X 1 # 10 -GROZ(FFG)', unitPrice: 11, unit: 'PCS', category: 'Sewing Needle' },
+      { needleType: 'DC X 1 # 12 -ORGAN', unitPrice: 7, unit: 'PCS', category: 'Sewing Needle' },
+      { needleType: 'DC X 1 KN # 9 LP -ORGAN', unitPrice: 9, unit: 'PCS', category: 'Sewing Needle' },
+      { needleType: 'DC X 1 KN PD # 9 -ORGAN', unitPrice: 9, unit: 'PCS', category: 'Sewing Needle' },
+      { needleType: 'DC X 1-KN # 11 -ORGAN', unitPrice: 9, unit: 'PCS', category: 'Sewing Needle' },
+      { needleType: 'DC X 1 NS', unitPrice: 7, unit: 'PCS', category: 'Sewing Needle' },
+      { needleType: 'DC X 1 27 SAN 10 # 8 -GROZ(FFG)', unitPrice: 12, unit: 'PCS', category: 'Sewing Needle' },
+      { needleType: 'DC X 1 # 14 -GROZ(FFG)', unitPrice: 12, unit: 'PCS', category: 'Sewing Needle' },
+      { needleType: 'DC X 1 # 14 -ORGAN', unitPrice: 8, unit: 'PCS', category: 'Sewing Needle' },
+      { needleType: 'DC X 1-KN # 8 -ORGAN', unitPrice: 9, unit: 'PCS', category: 'Sewing Needle' },
+      { needleType: 'DC X 1 # 7 -GROZ(FFG)', unitPrice: 11, unit: 'PCS', category: 'Sewing Needle' },
+      { needleType: 'DC X 1 # 10 -ORGAN', unitPrice: 7, unit: 'PCS', category: 'Sewing Needle' },
+      { needleType: 'UY X 128 # 8 -ORGAN', unitPrice: 7, unit: 'PCS', category: 'Overlock Needle' },
+      { needleType: 'UY X 128 # 9 -ORGAN', unitPrice: 7, unit: 'PCS', category: 'Overlock Needle' },
+      { needleType: 'UY X 128 GAS KN # 9 LP -ORGAN', unitPrice: 9, unit: 'PCS', category: 'Overlock Needle' },
+      { needleType: 'UY X 128 # 10 -ORGAN', unitPrice: 7, unit: 'PCS', category: 'Overlock Needle' },
+      { needleType: 'UY X 128 GAS KN # 10 LP -ORGAN', unitPrice: 9, unit: 'PCS', category: 'Overlock Needle' },
+      { needleType: 'UY X 128 # 11 -ORGAN', unitPrice: 7, unit: 'PCS', category: 'Overlock Needle' },
+      { needleType: 'UY X 128 # 12 -ORGAN', unitPrice: 7, unit: 'PCS', category: 'Overlock Needle' },
+      { needleType: 'UY X 128- GAS SF # 8 LP -ORGAN', unitPrice: 8, unit: 'PCS', category: 'Overlock Needle' },
+      { needleType: 'UYX 128-KN # 12 -ORGAN', unitPrice: 9, unit: 'PCS', category: 'Overlock Needle' },
+      { needleType: 'UY X 128 SF # 9 -ORGAN', unitPrice: 8, unit: 'PCS', category: 'Overlock Needle' },
+      { needleType: 'UY X 128 NY2 SPD # 12 -ORGAN', unitPrice: 9, unit: 'PCS', category: 'Overlock Needle' },
+      { needleType: 'UY X 128 # 14 -ORGAN', unitPrice: 8, unit: 'PCS', category: 'Overlock Needle' },
+      { needleType: 'UY X 128 # 12 -GROZ(GEBEDUR)', unitPrice: 12, unit: 'PCS', category: 'Overlock Needle' },
+      { needleType: 'UY X 128 SPD # 11 -ORGAN', unitPrice: 8, unit: 'PCS', category: 'Overlock Needle' },
+      { needleType: 'UY X 128 GAS SPD # 9 -ORGAN', unitPrice: 9, unit: 'PCS', category: 'Overlock Needle' },
+      { needleType: 'UY X 128 GAS SF # 10 LP -ORGAN', unitPrice: 9, unit: 'PCS', category: 'Overlock Needle' },
+      { needleType: 'UY X 128 # 7 -ORGAN', unitPrice: 7, unit: 'PCS', category: 'Overlock Needle' },
+      { needleType: 'UY X 128- GAS KN # 8 LP -ORGAN', unitPrice: 9, unit: 'PCS', category: 'Overlock Needle' },
+      { needleType: 'UY X 128-KK  # 9 -ORGAN', unitPrice: 8, unit: 'PCS', category: 'Overlock Needle' },
+      { needleType: 'UY X 128-KK-KN # 10 -ORGAN', unitPrice: 9, unit: 'PCS', category: 'Overlock Needle' },
+      { needleType: 'UY X 128-KK-KN # 11 -ORGAN', unitPrice: 9, unit: 'PCS', category: 'Overlock Needle' },
+      { needleType: 'UY X 128 GAS SPD+/SPD # 8 -ORGAN', unitPrice: 9, unit: 'PCS', category: 'Overlock Needle' },
+      { needleType: 'UY X 128-KN # 8 -ORGAN', unitPrice: 9, unit: 'PCS', category: 'Overlock Needle' },
+      { needleType: 'UY X128 KN HP # 10 -ORGAN', unitPrice: 9, unit: 'PCS', category: 'Overlock Needle' },
+      { needleType: 'UY X 128 -LE-SPD # 9 -ORGAN', unitPrice: 9, unit: 'PCS', category: 'Overlock Needle' },
+      { needleType: 'UY X 128 -LE # 11 -ORGAN', unitPrice: 8, unit: 'PCS', category: 'Overlock Needle' },
+      { needleType: 'UY X 128 KN # 11 -ORGAN', unitPrice: 9, unit: 'PCS', category: 'Overlock Needle' },
+      { needleType: 'UY X 128 SF # 10 -ORGAN', unitPrice: 8, unit: 'PCS', category: 'Overlock Needle' },
+      { needleType: 'UY X 128 # 11 -GROZ(RG)', unitPrice: 11, unit: 'PCS', category: 'Overlock Needle' },
+      { needleType: 'UY X 128 -LE # 9 -ORGAN', unitPrice: 8, unit: 'PCS', category: 'Overlock Needle' },
+      { needleType: 'UY X 128-KN # 12 LP -ORGAN', unitPrice: 9, unit: 'PCS', category: 'Overlock Needle' },
+      { needleType: 'UY X 128- KK - KN # 9 -ORGAN', unitPrice: 9, unit: 'PCS', category: 'Overlock Needle' },
+      { needleType: 'UY X 128 KN # 11 HP -ORGAN', unitPrice: 9, unit: 'PCS', category: 'Overlock Needle' },
+      { needleType: 'UY X 128 # 14 -GROZ(GEBEDUR)', unitPrice: 13, unit: 'PCS', category: 'Overlock Needle' },
+      { needleType: 'UY X 128 # 8 -GROZ(FFG)', unitPrice: 11, unit: 'PCS', category: 'Overlock Needle' },
+      { needleType: 'UY X 128 # 14 -GROZ(RG)', unitPrice: 12, unit: 'PCS', category: 'Overlock Needle' },
+      { needleType: 'UY X 128 SAN 10 XS  # 9 -GROZ(FFG)', unitPrice: 13, unit: 'PCS', category: 'Overlock Needle' },
+      { needleType: 'UY X 128 KN # 8 -ORGAN', unitPrice: 9, unit: 'PCS', category: 'Overlock Needle' },
+      { needleType: 'DP X 5 # 7 -ORGAN', unitPrice: 8, unit: 'PCS', category: 'Overlock Needle' },
+      { needleType: 'DP X 5 # 11 -ORGAN', unitPrice: 8, unit: 'PCS', category: 'Overlock Needle' },
+      { needleType: 'DP X 5 # 9 -ORGAN', unitPrice: 8, unit: 'PCS', category: 'Overlock Needle' },
+      { needleType: 'DP X 5-KN # 11 -ORGAN', unitPrice: 10, unit: 'PCS', category: 'Overlock Needle' },
+      { needleType: 'DP X 5-KN # 9 -ORGAN', unitPrice: 10, unit: 'PCS', category: 'Overlock Needle' },
+      { needleType: 'DP X 5 NS', unitPrice: 8, unit: 'PCS', category: 'Overlock Needle' },
+      { needleType: 'DP X 5 # 9 -GROZ(FFG)', unitPrice: 12, unit: 'PCS', category: 'Overlock Needle' },
+      { needleType: 'DP X 5-134SAN 10XS-FFG AI,NO-09,GROZ', unitPrice: 14, unit: 'PCS', category: 'Overlock Needle' },
+      { needleType: '(DPX5)134 SAN 10XS # 10 -GROZ(FFG)', unitPrice: 14, unit: 'PCS', category: 'Overlock Needle' },
+      { needleType: 'DP X 5 # 9 -GROZ(GEBEDUR)', unitPrice: 13, unit: 'PCS', category: 'Overlock Needle' },
+      { needleType: 'DP X 5 # 14 -GROZ(FFG)', unitPrice: 12, unit: 'PCS', category: 'Overlock Needle' },
+      { needleType: 'UO X 113(UO X 1) # 11 -ORGAN', unitPrice: 8, unit: 'PCS', category: 'Flatlock Needle' },
+      { needleType: 'UO X 113(UO X 1) # 11 -GROZ(FFG)', unitPrice: 12, unit: 'PCS', category: 'Flatlock Needle' },
+      { needleType: 'UO X 113(UO X 1) # 9 -GROZ(FFG)', unitPrice: 12, unit: 'PCS', category: 'Flatlock Needle' },
+      { needleType: 'UO X 113(UO X 1) # 14 -ORGAN', unitPrice: 9, unit: 'PCS', category: 'Flatlock Needle' },
+      { needleType: 'UO X 113(UO X 1) GS # 11 -ORGAN', unitPrice: 9, unit: 'PCS', category: 'Flatlock Needle' },
+      { needleType: 'UO X 113(UO X 1) # 9 -ORGAN', unitPrice: 8, unit: 'PCS', category: 'Flatlock Needle' },
+      { needleType: 'UO X 113(UO X 1)SLP # 10 -ORGAN', unitPrice: 9, unit: 'PCS', category: 'Flatlock Needle' },
+      { needleType: 'UO X 163 # 12 -GROZ(FFG)', unitPrice: 13, unit: 'PCS', category: 'Flatlock Needle' },
+      { needleType: 'DP X 17 # 11 -ORGAN', unitPrice: 9, unit: 'PCS', category: 'Overlock Needle' },
+      { needleType: 'DP X 17 # 9 -GROZ(FFG)', unitPrice: 12, unit: 'PCS', category: 'Overlock Needle' },
+      { needleType: 'DP X 17 # 9 -ORGAN', unitPrice: 9, unit: 'PCS', category: 'Overlock Needle' },
+      { needleType: 'DP X 17 kk(DPxN31) # 11 J -ORGAN', unitPrice: 10, unit: 'PCS', category: 'Overlock Needle' },
+      { needleType: 'DP X 17 kk(DPxN31) # 11 -ORGAN', unitPrice: 10, unit: 'PCS', category: 'Overlock Needle' },
+      { needleType: 'DV X 57 # 11 -ORGAN', unitPrice: 9, unit: 'PCS', category: 'Bar Tack Needle' },
+      { needleType: 'DV X 57 # 10 -ORGAN', unitPrice: 9, unit: 'PCS', category: 'Bar Tack Needle' },
+      { needleType: 'DV X 57 # 12 -ORGAN', unitPrice: 9, unit: 'PCS', category: 'Bar Tack Needle' },
+      { needleType: 'DV X 57 # 14 -GROZ(FFG)', unitPrice: 13, unit: 'PCS', category: 'Bar Tack Needle' },
+      { needleType: 'DV X 57 # 14 -ORGAN', unitPrice: 10, unit: 'PCS', category: 'Bar Tack Needle' },
+      { needleType: 'DV X57,LE-NY2 SLP,NO-14,ORGAN', unitPrice: 11, unit: 'PCS', category: 'Bar Tack Needle' },
+      { needleType: 'FLX 118-GCS # 10 -ORGAN', unitPrice: 8, unit: 'PCS', category: 'Flatlock Needle' },
+      { needleType: 'FLX 118-GCS # 9 -ORGAN', unitPrice: 8, unit: 'PCS', category: 'Flatlock Needle' },
+      { needleType: 'FLX 118-GCS # 11 -ORGAN', unitPrice: 8, unit: 'PCS', category: 'Flatlock Needle' },
+      { needleType: 'FLX 118-GCS NY2 # 10 -ORGAN', unitPrice: 9, unit: 'PCS', category: 'Flatlock Needle' },
+      { needleType: 'FLX 118-GCS NY2 # 9 -ORGAN', unitPrice: 9, unit: 'PCS', category: 'Flatlock Needle' },
+      { needleType: 'LW X 6 T/1669 E # 14 -GROZ(FFG)', unitPrice: 14, unit: 'PCS', category: 'Button Hole Needle' },
+      { needleType: 'LW X 6 T/1669 E # 16 -GROZ(FFG)', unitPrice: 15, unit: 'PCS', category: 'Button Hole Needle' },
+      { needleType: 'LWX1669E # 14 GROZ', unitPrice: 14, unit: 'PCS', category: 'Button Hole Needle' },
+      { needleType: 'LWX1669E # 12 GROZ', unitPrice: 13, unit: 'PCS', category: 'Button Hole Needle' },
+      { needleType: 'PH - C70 -  # 14 -ORGAN', unitPrice: 10, unit: 'PCS', category: 'Special Needle' },
+      { needleType: 'PH - C70 -  # 16 -ORGAN', unitPrice: 11, unit: 'PCS', category: 'Special Needle' },
+      { needleType: 'MM X 75,NO-118,ORGAN', unitPrice: 10, unit: 'PCS', category: 'Special Needle' },
+      { needleType: 'DM X 13 # 9 -GROZ(FFG)', unitPrice: 12, unit: 'PCS', category: 'Sewing Needle' },
+      { needleType: 'DM X 13 # 10 -GROZ(FFG)', unitPrice: 12, unit: 'PCS', category: 'Sewing Needle' },
+      { needleType: 'DV X 43', unitPrice: 10, unit: 'PCS', category: 'Special Needle' },
+    ];
+
+    for (const item of needlePrices) {
+      await fbPush('needlePriceMaster', { ...item, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() });
+      await fbPush('needleTypes', { name: item.needleType, category: item.category });
+    }
+
+    showToast(`${t('firebaseSeeded')}: ${campuses.length} campuses, ${floorData.length} floors, ${categories.length} categories, ${needlePrices.length} needle types`, 'success');
+    await fetchMasterData();
+    renderTab();
+  } catch (e) {
+    console.error('Seed error:', e);
+    showToast(t('seedFailed'), 'error');
+  }
+}
+
+// ========== BULK DELETE ITEM ==========
+function bindBulkDeleteButtons() {
+  document.querySelectorAll('.bulk-delete-item-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      if (!confirm(t('confirmDeleteItem'))) return;
+      const itemId = btn.dataset.deleteItem;
+      const fbPath = btn.dataset.deletePath;
+      const isUnit = btn.dataset.isUnit === '1';
+      const itemName = btn.dataset.itemName;
+
+      try {
+        if (isUnit) {
+          // For units, we need to find the specific key in Firebase
+          const unitsRaw = await fbGet('units');
+          if (unitsRaw) {
+            const entries = Object.entries(unitsRaw);
+            for (const [key, val] of entries) {
+              if ((val.name || val) === itemName) {
+                await fbDelete(`units/${key}`);
+                break;
+              }
+            }
+          }
+        } else {
+          await fbDelete(`${fbPath}/${itemId}`);
+        }
+
+        // Also delete from needlePriceMaster if deleting a needle type
+        if (fbPath === 'needleTypes') {
+          const priceEntry = state.needlePrices.find(p => p.needleType === itemName);
+          if (priceEntry) {
+            await fbDelete(`needlePriceMaster/${priceEntry.id}`);
+          }
+        }
+
+        showToast(t('itemDeleted'), 'success');
+        await fetchMasterData();
+        // Re-render just the existing items list, not the whole page
+        const list = document.getElementById('existingItemsList');
+        if (list) list.innerHTML = renderExistingItems();
+        // Update count
+        const countEl = document.querySelector('[data-bulk-count]');
+        bindBulkDeleteButtons();
+      } catch (e) {
+        console.error('Delete item error:', e);
+        showToast(t('deleteFailedMsg'), 'error');
+      }
+    });
+  });
+}
+
+// ========== BULK ADD ==========
+async function handleBulkAdd() {
+  if (!state.bulkAddText.trim()) {
+    showToast(t('enterItems'), 'error');
+    return;
+  }
+  const items = state.bulkAddText.split('\n').map(s => s.trim()).filter(s => s.length > 0);
+  if (items.length === 0) return;
+
+  // For floors, campus must be selected
+  if (state.bulkAddField === 'floors' && !state.bulkFloorCampusId) {
+    showToast(t('selectCampusForFloor'), 'error');
+    return;
+  }
+
+  try {
+    let added = 0;
+    let skipped = 0;
+
+    for (const item of items) {
+      if (state.bulkAddField === 'campuses') {
+        const exists = (state.masterData?.campuses || []).find(c => c.name.toLowerCase() === item.toLowerCase());
+        if (!exists) { await fbPush('campuses', { name: item }); added++; }
+        else { skipped++; }
+      } else if (state.bulkAddField === 'floors') {
+        const campus = (state.masterData?.campuses || []).find(c => c.id === state.bulkFloorCampusId);
+        if (campus) {
+          // Check if floor already exists under this campus
+          const existingFloors = campus.floors || [];
+          const exists = existingFloors.find(f => f.name.toLowerCase() === item.toLowerCase());
+          if (!exists) { await fbPush('floors', { name: item, campusId: state.bulkFloorCampusId }); added++; }
+          else { skipped++; }
+        } else { skipped++; }
+      } else if (state.bulkAddField === 'categories') {
+        const exists = (state.masterData?.categories || []).find(c => c.name.toLowerCase() === item.toLowerCase());
+        if (!exists) { await fbPush('categories', { name: item }); added++; }
+        else { skipped++; }
+      } else if (state.bulkAddField === 'units') {
+        const exists = (state.masterData?.units || []).find(u => (typeof u === 'string' ? u : u.name).toLowerCase() === item.toLowerCase());
+        if (!exists) { await fbPush('units', { name: item }); added++; }
+        else { skipped++; }
+      } else if (state.bulkAddField === 'types') {
+        const exists = (state.masterData?.needleTypes || []).find(n => n.name.toLowerCase() === item.toLowerCase());
+        if (!exists) { await fbPush('needleTypes', { name: item, category: '' }); added++; }
+        else { skipped++; }
+      } else if (state.bulkAddField === 'needleTypes') {
+        const exists = (state.masterData?.needleTypes || []).find(n => n.name.toLowerCase() === item.toLowerCase());
+        if (!exists) {
+          await fbPush('needleTypes', { name: item, category: '' });
+          await fbPush('needlePriceMaster', { needleType: item, unitPrice: 0, unit: 'PCS', category: '', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() });
+          added++;
+        } else { skipped++; }
+      }
+    }
+
+    let msg = `${added} ${t('added')}`;
+    if (skipped > 0) msg += `, ${skipped} ${t('skippedDuplicates')}`;
+    showToast(msg, added > 0 ? 'success' : 'info');
+    state.bulkAddText = '';
+    state.bulkSearchFilter = '';
+    await fetchMasterData();
+    renderTab();
+  } catch (e) {
+    console.error('Bulk add error:', e);
+    showToast(t('failedAdd'), 'error');
+  }
+}
+
+// ========== SAVE POSTING ==========
+async function handleSave() {
+  const fd = state.formData;
+  if (!fd.date || !fd.campus || !fd.floor || !fd.needleType) {
+    showToast(t('pleaseFill'), 'error');
+    return;
+  }
+
+  // Check duplicate challan
+  if (fd.challanNo) {
+    const existing = state.postings.find(p => p.challanNo === fd.challanNo && p.id !== state.editingId);
+    if (existing) {
+      showToast(t('duplicateChallan'), 'error');
+      return;
+    }
+  }
+
+  try {
+    const balance = getCalculatedBalance();
+    // Map campus/floor to campusName/floorName for Firebase storage
+    const payload = {
+      date: fd.date,
+      week: fd.week,
+      campusName: fd.campus,
+      floorName: fd.floor,
+      category: fd.category,
+      unit: fd.unit,
+      type: fd.type,
+      needleType: fd.needleType,
+      unitPrice: fd.unitPrice,
+      challanNo: fd.challanNo,
+      previousBL: fd.previousBL,
+      rcvd: fd.rcvd,
+      dlvd: fd.dlvd,
+      balance,
+      createdAt: new Date().toISOString(),
+    };
+
+    if (state.editingId) {
+      await fbPatch(`postings/${state.editingId}`, payload);
+      showToast(t('updateSuccess'), 'success');
+      state.editingId = null;
+    } else {
+      await fbPush('postings', payload);
+      showToast(t('saveSuccess'), 'success');
+    }
+
+    state.formData = {
+      date: new Date().toISOString().split('T')[0], week: calcWeek(new Date().toISOString().split('T')[0]), campus: '',
+      floor: '', category: '', unit: '', type: '', needleType: '',
+      unitPrice: 0, challanNo: '', previousBL: 0, rcvd: 0, dlvd: 0,
+    };
+
+    await fetchDashboard();
+    renderTab();
+  } catch (e) {
+    showToast(t('saveFailed'), 'error');
+  }
+}
+
+// ========== INITIALIZATION ==========
+async function init() {
+  applyTheme();
+
+  // Theme toggle in header
+  document.getElementById('themeToggle').addEventListener('click', () => {
+    state.darkMode = !state.darkMode;
+    applyTheme();
+  });
+
+  // Language toggle in header
+  document.getElementById('langToggle').addEventListener('click', () => {
+    state.language = state.language === 'en' ? 'bn' : 'en';
+    applyLanguage();
+  });
+
+  // Bottom nav
+  document.querySelectorAll('.nav-item').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      state.activeTab = btn.dataset.tab;
+      state.openDropdownKey = null;
+
+      if (state.activeTab === 'dashboard') await fetchDashboard();
+      else if (state.activeTab === 'newPosting') {
+        if (!state.masterData) await fetchMasterData();
+      }
+      else if (state.activeTab === 'history') await fetchPostings();
+      else if (state.activeTab === 'reports') await fetchPostings();
+
+      renderTab();
+    });
+  });
+
+  // Save button
+  document.getElementById('saveBtn').addEventListener('click', handleSave);
+
+  // Load master data
+  await fetchMasterData();
+  await fetchDashboard();
+  // Calculate initial week value
+  state.formData.week = calcWeek(state.formData.date);
+  renderTab();
+}
+
+// Start the app
+init();
+</script>
+</body>
+</html>
