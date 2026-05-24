@@ -146,6 +146,7 @@ body {
   background: var(--bg-input); padding: 10px 12px; font-size: 13px;
   color: var(--text); min-height: 44px; cursor: pointer;
   -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
 }
 .dropdown-btn span.placeholder { color: var(--text-muted); }
 .dropdown-chevron {
@@ -172,12 +173,14 @@ body {
   position: absolute; left: 16px; top: 50%; transform: translateY(-50%);
   width: 14px; height: 14px; color: var(--text-muted);
 }
-.dropdown-options { overflow-y: auto; max-height: 160px; }
+.dropdown-options { overflow-y: auto; max-height: 160px; -webkit-overflow-scrolling: touch; }
 .dropdown-option {
   width: 100%; text-align: left; padding: 10px 12px; font-size: 13px;
   border: none; background: transparent; color: var(--text);
   cursor: pointer; min-height: 44px; display: flex; align-items: center;
   -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  user-select: none; -webkit-user-select: none;
 }
 .dropdown-option:hover, .dropdown-option:active { background: var(--accent); }
 .dropdown-option.selected { background: var(--accent); font-weight: 600; }
@@ -197,6 +200,81 @@ body {
 .balance-value.low { color: var(--red-text); }
 .balance-value.ok { color: var(--teal-text); }
 .balance-calc { font-size: 11px; color: var(--text-muted); margin-top: 4px; }
+
+/* ========== SN CODE SEARCH ========== */
+.sn-code-wrapper { position: relative; }
+.sn-code-input-wrap { position: relative; }
+.sn-code-input-wrap .sn-icon {
+  position: absolute; left: 10px; top: 50%; transform: translateY(-50%);
+  width: 16px; height: 16px; color: var(--text-muted); pointer-events: none;
+}
+.sn-code-input {
+  width: 100%; border-radius: var(--radius); border: 1px solid var(--border-input);
+  background: var(--bg-input); padding: 10px 36px 10px 32px; font-size: 13px;
+  color: var(--text); min-height: 44px; outline: none; font-family: monospace;
+}
+.sn-code-input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(37,99,235,0.15); }
+.sn-code-input.matched {
+  border-color: var(--emerald-border);
+  box-shadow: 0 0 0 2px rgba(5,150,105,0.15);
+}
+.sn-code-input.not-found {
+  border-color: var(--red-border);
+}
+.sn-code-clear {
+  position: absolute; right: 8px; top: 50%; transform: translateY(-50%);
+  background: transparent; border: none; color: var(--text-muted); cursor: pointer;
+  padding: 4px; display: flex; align-items: center; justify-content: center;
+}
+.sn-code-clear:hover { color: var(--text); }
+.sn-code-match {
+  margin-top: 8px; border-radius: var(--radius); padding: 10px 12px;
+  border: 1px solid var(--emerald-border); background: var(--emerald-bg);
+}
+.sn-code-match-title {
+  display: flex; align-items: center; gap: 6px; margin-bottom: 4px;
+}
+.sn-code-match-title svg { width: 14px; height: 14px; color: var(--emerald-text); }
+.sn-code-match-title span { font-size: 11px; font-weight: 600; color: var(--emerald-text); }
+.sn-code-match-type { font-size: 13px; font-weight: 700; color: var(--text); }
+.sn-code-match-badges { display: flex; gap: 6px; margin-top: 6px; flex-wrap: wrap; }
+.sn-code-badge {
+  display: inline-flex; align-items: center; border-radius: 6px;
+  background: rgba(5,150,105,0.1); padding: 2px 8px;
+  font-size: 11px; font-weight: 500; color: var(--emerald-text);
+}
+.sn-code-not-found {
+  display: flex; align-items: center; gap: 4px; margin-top: 6px;
+  font-size: 11px; color: var(--red-text);
+}
+.sn-code-not-found svg { width: 12px; height: 12px; }
+.sn-code-dropdown {
+  position: absolute; z-index: 200; width: 100%; margin-top: 4px;
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: var(--radius); box-shadow: var(--shadow-lg);
+  max-height: 240px; overflow: hidden;
+}
+.sn-code-dropdown-header {
+  padding: 6px 10px; border-bottom: 1px solid var(--border);
+  background: var(--accent); font-size: 11px; color: var(--text-muted); font-weight: 500;
+}
+.sn-code-dropdown-options { overflow-y: auto; max-height: 200px; }
+.sn-code-option {
+  width: 100%; text-align: left; padding: 8px 10px; font-size: 12px;
+  border: none; background: transparent; color: var(--text);
+  cursor: pointer; min-height: 44px; border-bottom: 1px solid var(--border);
+  display: block;
+}
+.sn-code-option:last-child { border-bottom: none; }
+.sn-code-option:hover, .sn-code-option:active { background: var(--accent); }
+.sn-code-option-header { display: flex; align-items: center; gap: 6px; margin-bottom: 2px; }
+.sn-code-option-code {
+  font-family: monospace; font-size: 11px; font-weight: 700;
+  color: var(--primary); background: rgba(37,99,235,0.1);
+  padding: 1px 6px; border-radius: 4px;
+}
+.sn-code-option-meta { font-size: 10px; color: var(--text-muted); }
+.sn-code-option-type { font-size: 11px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text); }
 
 /* ========== SAVE BUTTON ========== */
 .save-bar {
@@ -468,6 +546,148 @@ body {
 // ========== CONFIGURATION ==========
 const FIREBASE_URL = 'https://sajulamia34345544-default-rtdb.firebaseio.com';
 
+// ========== SN CODE DATA ==========
+const SN_CODE_MAP = {
+  'SN-001':'DB X 1 # 7 -GROZ(FFG)','SN-003':'DB X 1 # 7 -ORGAN','SN-004':'DB X 1 SPD/SPD+ # 7 -ORGAN',
+  'SN-006':'DB X 1 SAN 10  # 7 -GROZ(FFG)','SN-008':'DB X 1 # 7 -ORGAN',
+  'SN-011':'DB X 1 # 8 -GROZ(FFG)','SN-013':'DB X 1 # 8 -ORGAN','SN-014':'DB X 1 SF  # 8 -ORGAN',
+  'SN-016':'DB X 1 SPD/SPD+ # 8 -ORGAN','SN-017':'DB X 1 KN PD # 8 -ORGAN','SN-019':'DB X 1 KN # 8 LP -ORGAN',
+  'SN-027':'DB X 1 SAN 10  # 9 -GROZ(FFG)','SN-029':'DB X 1 # 9 -ORGAN',
+  'SN-031':'DB X 1-KN # 9 -ORGAN','SN-032':'DB X 1-SF # 9 -ORGAN',
+  'SN-034':'DB X K 5 KK # 9 -ORGAN','SN-036':'DB X 1 KN   # 9LP -ORGAN',
+  'SN-043':'DB X 1 # 10 -ORGAN','SN-045':'DB X K5 KK # 10 -GROZ(FFG)',
+  'SN-056':'DB X 1 # 11 -ORGAN','SN-057':'DB X 5-K  # 11 -ORGAN','SN-058':'DB X K5 KK # 11 -ORGAN',
+  'SN-059':'DB X 1 KN # 11 LP -ORGAN','SN-064':'DB X 1 # 12 -GROZ(FFG)','SN-065':'DB X 1 # 12 -ORGAN',
+  'SN-070':'DB X 1 # 14 -GROZ(FFG)','SN-071':'DB X 1 # 14 -GROZ(GEBEDUR)',
+  'SN-079':'PH - C70 -  # 14 -ORGAN','SN-082':'PH - C70 -  # 16 -ORGAN',
+  'SN-084':'DC X 1 # 7 -GROZ(FFG)','SN-085':'DC X 1 # 7 -ORGAN',
+  'SN-092':'DC X 1 # 8 -ORGAN','SN-094':'DC X 1-KN # 8 -ORGAN','SN-095':'DC X 1-SF # 8 -ORGAN',
+  'SN-099':'DC X 1 27 SAN 10 # 8 -GROZ(FFG)','SN-101':'DC X 1-KN # 8 LP -ORGAN',
+  'SN-107':'DC X 1 # 9 -ORGAN','SN-111':'DC X 1 SF # 9 -ORGAN',
+  'SN-113':'DC X 1 KN # 9 LP -ORGAN','SN-114':'DC X 1 KN PD # 9 -ORGAN',
+  'SN-118':'DC X 1 # 10 -GROZ(FFG)','SN-119':'DC X 1 # 10 -ORGAN',
+  'SN-120':'DC X 1 27 SAN 10   # 10 -GROZ(FFG)','SN-126':'DC X 1 # 11 -ORGAN',
+  'SN-128':'DC X 1-KN # 11 -ORGAN','SN-133':'DC X 1 # 12 -ORGAN',
+  'SN-135':'DC X 1 # 14 -GROZ(FFG)','SN-136':'DC X 1 # 14 -ORGAN',
+  'SN-140':'UY X 128 # 7 -ORGAN','SN-146':'UY X 128 # 8 -GROZ(FFG)',
+  'SN-147':'UY X 128 # 8 -ORGAN','SN-149':'UY X 128-KN # 8 -ORGAN',
+  'SN-150':'UY X 128- GAS KN # 8 LP -ORGAN','SN-153':'UY X 128 GAS SPD+/SPD # 8 -ORGAN',
+  'SN-156':'UY X 128- GAS SF # 8 LP -ORGAN','SN-163':'UY X 128 # 9 -ORGAN',
+  'SN-169':'UY X 128- KK - KN # 9 -ORGAN','SN-171':'UY X 128 -LE # 9 -ORGAN',
+  'SN-172':'UY X 128 GAS SPD # 9 -ORGAN','SN-174':'UY X 128-KK  # 9 -ORGAN',
+  'SN-175':'UY X 128 GAS KN # 9 LP -ORGAN','SN-176':'UY X 128 SF # 9 -ORGAN',
+  'SN-177':'UY X 128 SAN 10 XS  # 9 -GROZ(FFG)','SN-179':'UY X 128 -LE-SPD # 9 -ORGAN',
+  'SN-183':'UY X 128 # 10 -ORGAN','SN-191':'UY X 128-KK-KN # 10 -ORGAN',
+  'SN-193':'UY X128 KN HP # 10 -ORGAN','SN-194':'UY X 128 SF # 10 -ORGAN',
+  'SN-195':'UY X 128 GAS KN # 10 LP -ORGAN','SN-197':'UY X 128 GAS SF # 10 LP -ORGAN',
+  'SN-201':'UY X 128 # 11 -GROZ(RG)','SN-203':'UY X 128 # 11 -ORGAN',
+  'SN-205':'UY X 128 -LE # 11 -ORGAN','SN-206':'UY X 128 SPD # 11 -ORGAN',
+  'SN-208':'UY X 128 KN # 11 -ORGAN','SN-209':'UY X 128 KN # 11 HP -ORGAN',
+  'SN-212':'UY X 128-KK-KN # 11 -ORGAN','SN-220':'UY X 128 # 12 -ORGAN',
+  'SN-222':'UY X 128 NY2 SPD # 12 -ORGAN','SN-223':'UYX 128-KN # 12 -ORGAN',
+  'SN-224':'UY X 128-KN # 12 LP -ORGAN','SN-225':'UY X 128 # 12 -GROZ(GEBEDUR)',
+  'SN-229':'UY X 128 # 14 -GROZ(RG)','SN-230':'UY X 128 # 14 -GROZ(GEBEDUR)',
+  'SN-231':'UY X 128 # 14 -ORGAN','SN-237':'DP X 5 # 7 -ORGAN',
+  'SN-248':'DP X 5 # 9 -GROZ(FFG)','SN-250':'DP X 5 # 9 -ORGAN',
+  'SN-253':'DP X 5 # 9 -GROZ(GEBEDUR)','SN-254':'DP X 5-KN # 9 -ORGAN',
+  'SN-255':'(DPX5)134 SAN 10XS # 10 -GROZ(FFG)','SN-261':'DP X 5 # 11 -ORGAN',
+  'SN-263':'DP X 5-KN # 11 -ORGAN','SN-265':'DP X 5 # 14 -GROZ(FFG)',
+  'SN-277':'UO X 113(UO X 1) # 9 -GROZ(FFG)','SN-278':'UO X 113(UO X 1) # 9 -ORGAN',
+  'SN-285':'UO X 113(UO X 1)SLP # 10 -ORGAN',
+  'SN-287':'UO X 113(UO X 1) # 11 -GROZ(FFG)','SN-289':'UO X 113(UO X 1) # 11 -ORGAN',
+  'SN-290':'UO X 113(UO X 1) GS # 11 -ORGAN','SN-297':'UO X 163 # 12 -GROZ(FFG)',
+  'SN-299':'UO X 113(UO X 1) # 14 -ORGAN','SN-300':'DP X 17 # 9 -GROZ(FFG)',
+  'SN-301':'DP X 17 # 9 -ORGAN','SN-308':'DP X 17 # 11 -ORGAN',
+  'SN-311':'DP X 17 kk(DPxN31) # 11 -ORGAN','SN-312':'DP X 17 kk(DPxN31) # 11 J -ORGAN',
+  'SN-317':'DV X 57 # 11 -ORGAN','SN-318':'DV X 57 # 12 -ORGAN',
+  'SN-319':'DV X 57 # 14 -GROZ(FFG)','SN-320':'DV X 57 # 14 -ORGAN',
+  'SN-324':'DV X 57 # 10 -ORGAN','SN-330':'FLX 118-GCS # 9 -ORGAN',
+  'SN-332':'FLX 118-GCS # 10 -ORGAN','SN-334':'FLX 118-GCS # 11 -ORGAN',
+  'SN-337':'FLX 118-GCS NY2 # 10 -ORGAN','SN-338':'FLX 118-GCS NY2 # 9 -ORGAN',
+  'SN-339':'FLX 118-GCS NY2 # 10 -ORGAN','SN-340':'DM X 13 # 9 -GROZ(FFG)',
+  'SN-343':'DM X 13 # 10 -GROZ(FFG)','SN-351':'LW X 6 T/1669 E # 14 -GROZ(FFG)',
+  'SN-352':'LW X 6 T/1669 E # 16 -GROZ(FFG)','SN-418':'DB X 1-GEBEDURE-FFG ,NO-08,GROZ',
+  'SN-422':'DP X 5-134SAN 10XS-FFG AI,NO-09,GROZ','SN-444':'MM X 75,NO-118,ORGAN',
+  'SN-461':'DB X 1 KN,NO-08,ORGAN','SN-473':'DV X57,LE-NY2 SLP,NO-14,ORGAN',
+  'SN-475':'DB X 1 NS,NO-LP,ORGAN','SN-476':'DP X 5 NS','SN-477':'DP X 5 NS',
+  'SN-478':'DC X 1 NS','SN-479':'DV X 43','SN-480':'LWX1669E # 14 GROZ',
+  'SN-481':'LWX1669E # 12 GROZ'
+};
+
+// Build combined SN code map from hardcoded + Firebase data
+function getCombinedSNCodeMap() {
+  const combined = { ...SN_CODE_MAP };
+  // Also add SN codes from Firebase needleTypes
+  if (state.masterData?.needleTypes) {
+    for (const nt of state.masterData.needleTypes) {
+      if (nt.snCode && nt.name) {
+        combined[nt.snCode.toUpperCase()] = nt.name;
+      }
+    }
+  }
+  return combined;
+}
+
+// Get the next available SN code number
+function getNextSNCodeNumber() {
+  const combined = getCombinedSNCodeMap();
+  let maxNum = 0;
+  for (const key of Object.keys(combined)) {
+    const num = parseInt(key.replace('SN-', ''));
+    if (!isNaN(num) && num > maxNum) maxNum = num;
+  }
+  return maxNum + 1;
+}
+
+function lookupSNCode(input) {
+  if (!input || !input.trim()) return null;
+  const combined = getCombinedSNCodeMap();
+  const norm = input.trim().toUpperCase();
+  if (combined[norm]) return combined[norm];
+  if (!norm.startsWith('SN-')) {
+    const withPrefix = 'SN-' + norm;
+    if (combined[withPrefix]) return combined[withPrefix];
+    const num = parseInt(norm.replace(/[^0-9]/g, ''));
+    if (!isNaN(num)) {
+      const padded = 'SN-' + String(num).padStart(3, '0');
+      if (combined[padded]) return combined[padded];
+    }
+  }
+  return null;
+}
+
+function searchSNCodes(query) {
+  if (!query || !query.trim()) return [];
+  const combined = getCombinedSNCodeMap();
+  const norm = query.trim().toUpperCase();
+  const results = [];
+  for (const [sn, type] of Object.entries(combined)) {
+    if (sn.includes(norm) || type.toUpperCase().includes(norm)) {
+      results.push({ snCode: sn, needleType: type });
+    }
+  }
+  results.sort((a, b) => {
+    const numA = parseInt(a.snCode.replace('SN-', ''));
+    const numB = parseInt(b.snCode.replace('SN-', ''));
+    return numA - numB;
+  });
+  return results.slice(0, 15);
+}
+
+function extractBrand(needleType) {
+  if (needleType.includes('ORGAN')) return 'ORGAN';
+  if (needleType.includes('GROZ(GEBEDUR)')) return 'GROZ(GEBEDUR)';
+  if (needleType.includes('GROZ(FFG)')) return 'GROZ(FFG)';
+  if (needleType.includes('GROZ(RG)')) return 'GROZ(RG)';
+  if (needleType.includes('GROZ')) return 'GROZ';
+  return 'OTHER';
+}
+
+function extractSize(needleType) {
+  const match = needleType.match(/#\s*(\d+)/);
+  return match ? match[1] : '';
+}
+
 // ========== STATE ==========
 const state = {
   language: localStorage.getItem('needleLang') || 'en',
@@ -486,6 +706,10 @@ const state = {
   bulkAddText: '',
   bulkFloorCampusId: '',
   bulkSearchFilter: '',
+  snCodeInput: '',
+  snCodeMatch: null,
+  snCodeResults: [],
+  snCodeDropdownOpen: false,
   formData: {
     date: new Date().toISOString().split('T')[0], week: '', campus: '',
     floor: '', category: '', unit: '', type: '', needleType: '',
@@ -508,7 +732,7 @@ const T = {
     date: 'Date', week: 'Week', campusName: 'Campus Name',
     floorName: 'Floor / Location', category: 'Category', unit: 'Unit',
     type: 'Type', needleType: 'Needle Type', unitPrice: 'Unit Price',
-    challanNo: 'Challan No', previousBL: 'Previous BL', rcvd: 'Received',
+    challanNo: 'Challan No', itemCode: 'Item Code', previousBL: 'Previous BL', rcvd: 'Received',
     dlvd: 'Delivered', balance: 'Balance', save: 'Save Posting',
     update: 'Update Posting', selectCampus: 'Select Campus',
     selectFloor: 'Select Floor', selectCategory: 'Select Category',
@@ -552,6 +776,19 @@ const T = {
     noItemsYet: 'No items yet',
     searchItems: 'Search items...',
     itemDeleted: 'Item deleted', deleteFailedMsg: 'Delete failed',
+    snCode: 'SN Code', enterSNCode: 'Enter SN Code (e.g. SN-003)',
+    snCodeFound: 'Needle type found!', snCodeNotFound: 'SN Code not found',
+    searchBySNCode: 'Search by SN Code', needleTypeAutoFilled: 'Needle type auto-filled',
+    brand: 'Brand', size: 'Size', resultsFound: 'results found',
+    addNewNeedleType: 'Add New Needle Type',
+    addNeedleDesc: 'Add a new needle type with SN Code, price and category. The SN Code will be used for quick search in New Posting form.',
+    nextSNCode: 'Next SN Code', snCodeFormat: 'Format: SN-XXX',
+    needleTypeName: 'Needle Type Name', enterNeedleName: 'Enter needle type name',
+    addNeedle: 'Add Needle Type', needleAdded: 'Needle type added successfully!',
+    snCodeExists: 'This SN Code already exists!', needleNameExists: 'This needle type already exists!',
+    bulkAddNeedleSNInfo: 'Tip: For Needle Type, you can use format: SN-XXX: Needle Type Name (e.g. SN-500: DB X 1 # 16 -ORGAN)',
+    snCodeLabel: 'SN Code',
+    editSNCode: 'Edit SN Code',
   },
   bn: {
     appName: 'সুই ইনভেন্টরি', dashboard: 'ড্যাশবোর্ড', newPosting: 'নতুন পোস্টিং',
@@ -562,7 +799,7 @@ const T = {
     date: 'তারিখ', week: 'সপ্তাহ', campusName: 'ক্যাম্পাসের নাম',
     floorName: 'ফ্লোর / অবস্থান', category: 'ক্যাটাগরি', unit: 'একক',
     type: 'ধরন', needleType: 'সুইয়ের ধরন', unitPrice: 'একক মূল্য',
-    challanNo: 'চালান নং', previousBL: 'পূর্বের ব্যালেন্স', rcvd: 'গৃহীত',
+    challanNo: 'চালান নং', itemCode: 'আইটেম কোড', previousBL: 'পূর্বের ব্যালেন্স', rcvd: 'গৃহীত',
     dlvd: 'প্রদত্ত', balance: 'ব্যালেন্স', save: 'পোস্টিং সংরক্ষণ',
     update: 'পোস্টিং আপডেট', selectCampus: 'ক্যাম্পাস নির্বাচন',
     selectFloor: 'ফ্লোর নির্বাচন', selectCategory: 'ক্যাটাগরি নির্বাচন',
@@ -606,6 +843,19 @@ const T = {
     noItemsYet: 'কোন আইটেম নেই',
     searchItems: 'আইটেম খুঁজুন...',
     itemDeleted: 'আইটেম মুছে ফেলা হয়েছে', deleteFailedMsg: 'মুছে ফেলা ব্যর্থ',
+    snCode: 'SN কোড', enterSNCode: 'SN কোড লিখুন (যেমন SN-003)',
+    snCodeFound: 'সুইয়ের ধরন পাওয়া গেছে!', snCodeNotFound: 'SN কোড পাওয়া যায়নি',
+    searchBySNCode: 'SN কোড দিয়ে খুঁজুন', needleTypeAutoFilled: 'সুইয়ের ধরন স্বয়ংক্রিয়ভাবে পূরণ হয়েছে',
+    brand: 'ব্র্যান্ড', size: 'সাইজ', resultsFound: 'টি ফলাফল পাওয়া গেছে',
+    addNewNeedleType: 'নতুন নিডেল টাইপ যোগ করুন',
+    addNeedleDesc: 'SN কোড, মূল্য এবং ক্যাটাগরি সহ নতুন নিডেল টাইপ যোগ করুন। SN কোড ব্যবহার করে নতুন পোস্টিং ফর্মে দ্রুত খুঁজে পাওয়া যাবে।',
+    nextSNCode: 'পরবর্তী SN কোড', snCodeFormat: 'ফরম্যাট: SN-XXX',
+    needleTypeName: 'নিডেল টাইপের নাম', enterNeedleName: 'নিডেল টাইপের নাম লিখুন',
+    addNeedle: 'নিডেল টাইপ যোগ করুন', needleAdded: 'নিডেল টাইপ সফলভাবে যোগ হয়েছে!',
+    snCodeExists: 'এই SN কোড ইতিমধ্যে আছে!', needleNameExists: 'এই নিডেল টাইপ ইতিমধ্যে আছে!',
+    bulkAddNeedleSNInfo: 'টিপ: নিডেল টাইপের জন্য ফরম্যাট ব্যবহার করুন: SN-XXX: নিডেল টাইপের নাম (যেমন SN-500: DB X 1 # 16 -ORGAN)',
+    snCodeLabel: 'SN কোড',
+    editSNCode: 'SN কোড সম্পাদনা',
   }
 };
 
@@ -815,6 +1065,8 @@ function syncFormToState() {
   if (dlvdEl) state.formData.dlvd = parseFloat(dlvdEl.value) || 0;
   if (unitPriceEl) state.formData.unitPrice = parseFloat(unitPriceEl.value) || 0;
   if (challanEl) state.formData.challanNo = challanEl.value;
+  const itemCodeEl = document.getElementById('formItemCode');
+  if (itemCodeEl) state.formData.itemCode = itemCodeEl.value;
 }
 
 // ========== SEARCHABLE DROPDOWN HTML ==========
@@ -1000,7 +1252,10 @@ function renderNewPosting() {
   const floorOptions = campus ? (campus.floors || []).map(f => f.name) : [];
   const categoryOptions = (state.masterData?.categories || []).map(c => c.name);
   const unitOptions = state.masterData?.units || ['PCS', 'BOX', 'SET', 'PACK'];
-  const needleTypeOptions = (state.masterData?.needleTypes || []).map(n => n.name);
+  const needleTypeOptions = (state.masterData?.needleTypes || []).map(n => {
+    const snPrefix = n.snCode ? `[${n.snCode}] ` : '';
+    return { value: n.name, label: `${snPrefix}${n.name}` };
+  });
   const typeOptions = [{ value: 'Receiving', label: t('receiving') }, { value: 'Delivery', label: t('delivery') }];
 
   let editBanner = '';
@@ -1016,6 +1271,57 @@ function renderNewPosting() {
 
   return `<div class="space-y">
     ${editBanner}
+
+    <!-- SN Code Lookup -->
+    <div class="sn-code-wrapper" id="snCodeWrapper">
+      <label class="form-label" style="display:flex;align-items:center;gap:4px">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+        ${t('snCode')}
+      </label>
+      <div class="sn-code-input-wrap">
+        <svg class="sn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+        <input type="text" class="sn-code-input ${state.snCodeMatch ? 'matched' : (state.snCodeInput && !state.snCodeMatch ? 'not-found' : '')}" 
+          id="snCodeInput" value="${escHTML(state.snCodeInput)}" placeholder="${t('enterSNCode')}" autocomplete="off">
+        ${state.snCodeInput ? `<button class="sn-code-clear" id="snCodeClear" type="button">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>` : ''}
+      </div>
+      ${state.snCodeMatch ? `
+      <div class="sn-code-match">
+        <div class="sn-code-match-title">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20,6 9,17 4,12"/></svg>
+          <span>${t('snCodeFound')}</span>
+        </div>
+        <div class="sn-code-match-type">${escHTML(state.snCodeMatch)}</div>
+        <div class="sn-code-match-badges">
+          <span class="sn-code-badge">${t('brand')}: ${extractBrand(state.snCodeMatch)}</span>
+          ${extractSize(state.snCodeMatch) ? `<span class="sn-code-badge">${t('size')}: #${extractSize(state.snCodeMatch)}</span>` : ''}
+        </div>
+      </div>
+      ` : ''}
+      ${state.snCodeInput && !state.snCodeMatch && !state.snCodeDropdownOpen ? `
+      <div class="sn-code-not-found">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        ${t('snCodeNotFound')}
+      </div>
+      ` : ''}
+      ${state.snCodeDropdownOpen && state.snCodeResults.length > 0 ? `
+      <div class="sn-code-dropdown" id="snCodeDropdown">
+        <div class="sn-code-dropdown-header">${state.snCodeResults.length} ${t('resultsFound')}</div>
+        <div class="sn-code-dropdown-options">
+          ${state.snCodeResults.map(r => `
+          <button class="sn-code-option" type="button" data-sn-select="${escHTML(r.snCode)}" data-sn-needle="${escHTML(r.needleType)}">
+            <div class="sn-code-option-header">
+              <span class="sn-code-option-code">${escHTML(r.snCode)}</span>
+              <span class="sn-code-option-meta">${extractBrand(r.needleType)} #${extractSize(r.needleType)}</span>
+            </div>
+            <div class="sn-code-option-type">${escHTML(r.needleType)}</div>
+          </button>
+          `).join('')}
+        </div>
+      </div>
+      ` : ''}
+    </div>
 
     <!-- Date and Week -->
     <div class="form-grid">
@@ -1044,11 +1350,11 @@ function renderNewPosting() {
     <!-- Type and Needle Type -->
     <div class="form-grid">
       ${dropdownHTML('type', t('type'), fd.type, typeOptions, t('selectType'), false, true)}
-      ${dropdownHTML('needleType', t('needleType'), fd.needleType, needleTypeOptions, t('selectNeedle'), true)}
+      ${dropdownHTML('needleType', t('needleType'), fd.needleType, needleTypeOptions, t('selectNeedle'), true, true)}
     </div>
 
-    <!-- Unit Price and Challan -->
-    <div class="form-grid">
+    <!-- Unit Price, Challan, and Item Code -->
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
       <div class="form-group">
         <label class="form-label">${t('unitPrice')}</label>
         <input type="number" inputmode="decimal" class="form-input" id="formUnitPrice" value="${fd.unitPrice || ''}" placeholder="${t('enterPrice')}">
@@ -1056,6 +1362,10 @@ function renderNewPosting() {
       <div class="form-group">
         <label class="form-label">${t('challanNo')}</label>
         <input type="text" class="form-input" id="formChallanNo" value="${escHTML(fd.challanNo)}" placeholder="${t('enterChallan')}">
+      </div>
+      <div class="form-group">
+        <label class="form-label">${t('itemCode')}</label>
+        <input type="text" class="form-input" id="formItemCode" value="${escHTML(fd.itemCode || '')}" placeholder="SN-XXX" style="font-family:monospace;${fd.itemCode ? 'background:var(--accent);font-weight:600;' : ''}" readonly>
       </div>
     </div>
 
@@ -1139,7 +1449,7 @@ function renderHistory() {
         </div>
         <div class="posting-footer">
           <span>${p.date} | ${p.week}</span>
-          <span>Challan: ${p.challanNo || '-'}</span>
+          <span>Challan: ${p.challanNo || '-'}${p.itemCode ? ' | Item: ' + escHTML(p.itemCode) : ''}</span>
         </div>
       </div>`;
     }).join('') + '</div>';
@@ -1285,9 +1595,9 @@ function renderExistingItems() {
   } else if (field === 'units') {
     items = (state.masterData?.units || []).map((u, i) => ({ id: `unit-${i}`, name: u, sub: '', fbPath: 'units', isUnit: true }));
   } else if (field === 'types') {
-    items = (state.masterData?.needleTypes || []).map(n => ({ id: n.id, name: n.name, sub: n.category || '', fbPath: 'needleTypes' }));
+    items = (state.masterData?.needleTypes || []).map(n => ({ id: n.id, name: n.name, sub: n.snCode ? `SN: ${n.snCode}` : (n.category || ''), fbPath: 'needleTypes' }));
   } else if (field === 'needleTypes') {
-    items = (state.masterData?.needleTypes || []).map(n => ({ id: n.id, name: n.name, sub: n.category || '', fbPath: 'needleTypes' }));
+    items = (state.masterData?.needleTypes || []).map(n => ({ id: n.id, name: n.name, sub: n.snCode ? `SN: ${n.snCode}` : (n.category || ''), fbPath: 'needleTypes' }));
   }
 
   // Apply search filter
@@ -1335,10 +1645,16 @@ function renderSettings() {
     priceListHTML = `<div class="text-center" style="padding:16px"><p class="text-xs text-muted">${t('loadFirst')}</p></div>`;
   } else {
     priceListHTML = state.needlePrices.map(np => {
+      // Find SN code for this needle type
+      let snCodeDisplay = '';
+      const needleTypeEntry = (state.masterData?.needleTypes || []).find(n => n.name === np.needleType);
+      if (needleTypeEntry?.snCode) {
+        snCodeDisplay = `<span style="font-family:monospace;font-size:9px;font-weight:700;color:var(--primary);background:rgba(37,99,235,0.1);padding:1px 4px;border-radius:3px;margin-left:4px">${escHTML(needleTypeEntry.snCode)}</span>`;
+      }
       const isEditing = state.editingPriceId === np.id;
       if (isEditing) {
         return `<div class="price-row">
-          <div class="price-name"><div class="price-name-text">${escHTML(np.needleType)}</div><div class="price-name-cat">${escHTML(np.category)}</div></div>
+          <div class="price-name"><div class="price-name-text">${escHTML(np.needleType)}${snCodeDisplay}</div><div class="price-name-cat">${escHTML(np.category)}</div></div>
           <div class="price-actions">
             <input type="number" inputmode="decimal" class="price-edit-input" id="priceEditInput" value="${np.unitPrice}" data-price-id="${np.id}" autofocus>
             <button class="price-save-btn" data-save-price="${np.id}" data-needle-type="${escHTML(np.needleType)}">
@@ -1351,7 +1667,7 @@ function renderSettings() {
         </div>`;
       }
       return `<div class="price-row">
-        <div class="price-name"><div class="price-name-text">${escHTML(np.needleType)}</div><div class="price-name-cat">${escHTML(np.category)}</div></div>
+        <div class="price-name"><div class="price-name-text">${escHTML(np.needleType)}${snCodeDisplay}</div><div class="price-name-cat">${escHTML(np.category)}</div></div>
         <div class="price-actions">
           <span class="price-value">${np.unitPrice} ৳</span>
           <button class="price-edit-btn" data-edit-price="${np.id}" data-current-price="${np.unitPrice}">
@@ -1406,6 +1722,59 @@ function renderSettings() {
       <button class="seed-btn" id="seedFirebaseBtn">${t('loadData')}</button>
     </div>
 
+    <!-- Add New Needle Type with SN Code -->
+    <div class="card">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+        <span style="font-size:13px;font-weight:700">${t('addNewNeedleType')}</span>
+      </div>
+      <p style="font-size:11px;color:var(--text-muted);margin-bottom:10px">${t('addNeedleDesc')}</p>
+
+      <div class="form-grid" style="margin-bottom:8px">
+        <div class="form-group">
+          <label class="form-label">${t('snCodeLabel')} *</label>
+          <div style="position:relative">
+            <input type="text" class="form-input" id="newNeedleSNCode" value="SN-${String(getNextSNCodeNumber()).padStart(3, '0')}" placeholder="${t('snCodeFormat')}" style="font-family:monospace;padding-right:36px">
+            <button type="button" id="autoSNCodeBtn" style="position:absolute;right:4px;top:50%;transform:translateY(-50%);padding:4px 8px;border-radius:6px;border:none;background:var(--primary);color:white;font-size:10px;cursor:pointer;min-height:32px" title="${t('nextSNCode')}">Auto</button>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">${t('needleTypeName')} *</label>
+          <input type="text" class="form-input" id="newNeedleName" placeholder="${t('enterNeedleName')}">
+        </div>
+      </div>
+      <div class="form-grid" style="margin-bottom:8px">
+        <div class="form-group">
+          <label class="form-label">${t('category')}</label>
+          <select class="form-input" id="newNeedleCategory">
+            <option value="">${t('selectCategory')}</option>
+            ${(state.masterData?.categories || []).map(c => `<option value="${escHTML(c.name)}">${escHTML(c.name)}</option>`).join('')}
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">${t('unit')}</label>
+          <select class="form-input" id="newNeedleUnit">
+            ${(state.masterData?.units || ['PCS', 'BOX', 'SET', 'PACK']).map(u => {
+              const val = typeof u === 'string' ? u : u.name;
+              return `<option value="${escHTML(val)}" ${val === 'PCS' ? 'selected' : ''}>${escHTML(val)}</option>`;
+            }).join('')}
+          </select>
+        </div>
+      </div>
+      <div class="form-grid" style="margin-bottom:8px">
+        <div class="form-group">
+          <label class="form-label">${t('unitPrice')}</label>
+          <input type="number" inputmode="decimal" class="form-input" id="newNeedlePrice" value="0" placeholder="${t('enterPrice')}">
+        </div>
+        <div class="form-group" style="display:flex;align-items:flex-end">
+          <button class="bulk-add-btn" id="addNewNeedleBtn" style="margin-top:0">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20,6 9,17 4,12"/></svg>
+            ${t('addNeedle')}
+          </button>
+        </div>
+      </div>
+    </div>
+
     <!-- Bulk Add -->
     <div class="card">
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
@@ -1413,6 +1782,13 @@ function renderSettings() {
         <span style="font-size:13px;font-weight:700">${t('bulkAddTitle')}</span>
       </div>
       <p style="font-size:11px;color:var(--text-muted);margin-bottom:10px">${t('bulkAddDesc')}</p>
+
+      ${state.bulkAddField === 'needleTypes' || state.bulkAddField === 'types' ? `
+      <div style="background:var(--emerald-bg);border:1px solid var(--emerald-border);border-radius:var(--radius);padding:8px 10px;margin-bottom:10px;display:flex;align-items:flex-start;gap:6px">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--emerald-text)" stroke-width="2" style="flex-shrink:0;margin-top:1px"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+        <span style="font-size:11px;color:var(--emerald-text)">${t('bulkAddNeedleSNInfo')}</span>
+      </div>
+      ` : ''}
       <div class="bulk-field-grid">
         ${bulkFields.map(f => `<button class="bulk-field-btn ${state.bulkAddField === f.key ? 'active' : ''}" data-bulk-field="${f.key}">${f.label}</button>`).join('')}
       </div>
@@ -1519,14 +1895,183 @@ function bindTabEvents() {
   const cancelBtn = document.getElementById('cancelEditBtn');
   if (cancelBtn) cancelBtn.addEventListener('click', () => {
     state.editingId = null;
-    state.formData = { date: new Date().toISOString().split('T')[0], week: calcWeek(new Date().toISOString().split('T')[0]), campus: '', floor: '', category: '', unit: '', type: '', needleType: '', unitPrice: 0, challanNo: '', previousBL: 0, rcvd: 0, dlvd: 0 };
+    state.formData = { date: new Date().toISOString().split('T')[0], week: calcWeek(new Date().toISOString().split('T')[0]), campus: '', floor: '', category: '', unit: '', type: '', needleType: '', unitPrice: 0, challanNo: '', itemCode: '', previousBL: 0, rcvd: 0, dlvd: 0 };
+    state.snCodeInput = '';
+    state.snCodeMatch = null;
+    state.snCodeResults = [];
+    state.snCodeDropdownOpen = false;
     renderTab();
   });
+
+  // SN Code input
+  const snCodeInput = document.getElementById('snCodeInput');
+  if (snCodeInput) {
+    snCodeInput.addEventListener('input', e => {
+      const val = e.target.value;
+      state.snCodeInput = val;
+      if (val.trim()) {
+        const results = searchSNCodes(val.trim());
+        state.snCodeResults = results;
+        state.snCodeDropdownOpen = results.length > 0;
+        const match = lookupSNCode(val.trim());
+        state.snCodeMatch = match;
+        // Auto-fill needle type when exact SN code match found
+        if (match) {
+          state.formData.needleType = match;
+          state.formData.itemCode = val.trim().toUpperCase();
+          autofillFromNeedleType(match);
+          // Update unit price and category inputs immediately
+          const upInput = document.getElementById('formUnitPrice');
+          if (upInput) upInput.value = state.formData.unitPrice || '';
+          // Update needle type dropdown button display
+          const needleDropdownBtn = document.querySelector('[data-dropdown-toggle="needleType"]');
+          if (needleDropdownBtn) {
+            const spanEl = needleDropdownBtn.querySelector('span');
+            if (spanEl) {
+              spanEl.textContent = match;
+              spanEl.className = '';
+            }
+          }
+        }
+      } else {
+        state.snCodeResults = [];
+        state.snCodeDropdownOpen = false;
+        state.snCodeMatch = null;
+        state.formData.itemCode = '';
+      }
+      // Update the SN code section without full re-render to keep focus
+      updateSNCodeDisplay();
+    });
+  }
+
+  // Function to update SN code display without full re-render
+  function updateSNCodeDisplay() {
+    const input = document.getElementById('snCodeInput');
+    if (input) {
+      input.className = `sn-code-input ${state.snCodeMatch ? 'matched' : (state.snCodeInput && !state.snCodeMatch ? 'not-found' : '')}`;
+    }
+    // Update match indicator
+    const wrapper = document.getElementById('snCodeWrapper');
+    if (!wrapper) return;
+    
+    // Remove old match/not-found/dropdown elements
+    const oldMatch = wrapper.querySelector('.sn-code-match');
+    if (oldMatch) oldMatch.remove();
+    const oldNotFound = wrapper.querySelector('.sn-code-not-found');
+    if (oldNotFound) oldNotFound.remove();
+    const oldDropdown = wrapper.querySelector('.sn-code-dropdown');
+    if (oldDropdown) oldDropdown.remove();
+    
+    const inputWrap = wrapper.querySelector('.sn-code-input-wrap');
+    if (!inputWrap) return;
+
+    // Update clear button visibility
+    let clearBtn = inputWrap.querySelector('.sn-code-clear');
+    if (state.snCodeInput && !clearBtn) {
+      clearBtn = document.createElement('button');
+      clearBtn.className = 'sn-code-clear';
+      clearBtn.id = 'snCodeClear';
+      clearBtn.type = 'button';
+      clearBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
+      clearBtn.addEventListener('click', () => {
+        state.snCodeInput = '';
+        state.snCodeMatch = null;
+        state.snCodeResults = [];
+        state.snCodeDropdownOpen = false;
+        state.formData.itemCode = '';
+        renderTab();
+      });
+      inputWrap.appendChild(clearBtn);
+    } else if (!state.snCodeInput && clearBtn) {
+      clearBtn.remove();
+    }
+    
+    if (state.snCodeMatch) {
+      const matchDiv = document.createElement('div');
+      matchDiv.className = 'sn-code-match';
+      matchDiv.innerHTML = `
+        <div class="sn-code-match-title">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20,6 9,17 4,12"/></svg>
+          <span>${t('snCodeFound')}</span>
+        </div>
+        <div class="sn-code-match-type">${escHTML(state.snCodeMatch)}</div>
+        <div class="sn-code-match-badges">
+          <span class="sn-code-badge">${t('brand')}: ${extractBrand(state.snCodeMatch)}</span>
+          ${extractSize(state.snCodeMatch) ? `<span class="sn-code-badge">${t('size')}: #${extractSize(state.snCodeMatch)}</span>` : ''}
+        </div>`;
+      inputWrap.after(matchDiv);
+    } else if (state.snCodeInput && !state.snCodeDropdownOpen) {
+      const nfDiv = document.createElement('div');
+      nfDiv.className = 'sn-code-not-found';
+      nfDiv.innerHTML = `
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        ${t('snCodeNotFound')}`;
+      inputWrap.after(nfDiv);
+    }
+    
+    if (state.snCodeDropdownOpen && state.snCodeResults.length > 0) {
+      const ddDiv = document.createElement('div');
+      ddDiv.className = 'sn-code-dropdown';
+      ddDiv.id = 'snCodeDropdown';
+      ddDiv.innerHTML = `
+        <div class="sn-code-dropdown-header">${state.snCodeResults.length} ${t('resultsFound')}</div>
+        <div class="sn-code-dropdown-options">
+          ${state.snCodeResults.map(r => `
+          <button class="sn-code-option" type="button" data-sn-select="${escHTML(r.snCode)}" data-sn-needle="${escHTML(r.needleType)}">
+            <div class="sn-code-option-header">
+              <span class="sn-code-option-code">${escHTML(r.snCode)}</span>
+              <span class="sn-code-option-meta">${extractBrand(r.needleType)} #${extractSize(r.needleType)}</span>
+            </div>
+            <div class="sn-code-option-type">${escHTML(r.needleType)}</div>
+          </button>
+          `).join('')}
+        </div>`;
+      inputWrap.after(ddDiv);
+      // Bind SN code dropdown select events
+      ddDiv.querySelectorAll('[data-sn-select]').forEach(btn => {
+        btn.addEventListener('click', e => {
+          e.stopPropagation();
+          const snCode = btn.dataset.snSelect;
+          const needleType = btn.dataset.snNeedle;
+          state.snCodeInput = snCode;
+          state.snCodeMatch = needleType;
+          state.snCodeDropdownOpen = false;
+          state.snCodeResults = [];
+          state.formData.needleType = needleType;
+          state.formData.itemCode = snCode;
+          autofillFromNeedleType(needleType);
+          showToast(t('needleTypeAutoFilled'), 'success');
+          syncFormToState();
+          renderTab();
+          fetchPrevBalance().then(() => {
+            if (state.activeTab === 'newPosting') {
+              const prevInput = document.getElementById('formPrevBL');
+              if (prevInput) prevInput.value = state.formData.previousBL || '';
+              const upInput = document.getElementById('formUnitPrice');
+              if (upInput) upInput.value = state.formData.unitPrice || '';
+              if (window.updateBalanceDisplay) window.updateBalanceDisplay();
+            }
+          });
+        });
+      });
+    }
+  }
+
+  // Click outside to close SN code dropdown
+  if (window._snCodeClickOutside) document.removeEventListener('click', window._snCodeClickOutside);
+  window._snCodeClickOutside = function(e) {
+    if (state.snCodeDropdownOpen && !e.target.closest('#snCodeWrapper')) {
+      state.snCodeDropdownOpen = false;
+      renderTab();
+    }
+  };
+  document.addEventListener('click', window._snCodeClickOutside);
 
   // Dropdown toggle
   document.querySelectorAll('[data-dropdown-toggle]').forEach(btn => {
     btn.addEventListener('click', e => {
       e.stopPropagation();
+      e.preventDefault();
       // Sync current form values to state before re-rendering
       syncFormToState();
       const key = btn.dataset.dropdownToggle;
@@ -1542,6 +2087,8 @@ function bindTabEvents() {
   // Prevent clicks inside dropdown menus from closing the dropdown
   document.querySelectorAll('.dropdown-menu').forEach(menu => {
     menu.addEventListener('click', e => e.stopPropagation());
+    menu.addEventListener('mousedown', e => e.stopPropagation());
+    menu.addEventListener('touchstart', e => e.stopPropagation(), { passive: true });
   });
 
   // Dropdown search
@@ -1568,15 +2115,27 @@ function bindTabEvents() {
 
   // Dropdown select
   document.querySelectorAll('[data-dropdown-select]').forEach(btn => {
-    btn.addEventListener('click', e => {
+    // Use both click and touchend for better mobile support
+    const handleSelect = (e) => {
+      e.preventDefault();
       e.stopPropagation();
       const key = btn.dataset.dropdownSelect;
       const value = btn.dataset.value;
+      if (!key || !value) return;
       state.formData[key] = value;
       state.openDropdownKey = null;
 
       if (key === 'campus') state.formData.floor = '';
-      if (key === 'needleType') autofillFromNeedleType(value);
+      if (key === 'needleType') {
+        autofillFromNeedleType(value);
+        // Auto-fill itemCode from needle type's SN code
+        const ntEntry = (state.masterData?.needleTypes || []).find(n => n.name === value);
+        if (ntEntry && ntEntry.snCode) {
+          state.formData.itemCode = ntEntry.snCode;
+        } else {
+          state.formData.itemCode = '';
+        }
+      }
 
       renderTab();
 
@@ -1595,11 +2154,15 @@ function bindTabEvents() {
           }
         });
       }
-    });
+    };
+    btn.addEventListener('click', handleSelect);
   });
 
   // Click outside to close dropdown (remove old handler first to prevent duplicates)
-  if (window._dropdownClickOutside) document.removeEventListener('click', window._dropdownClickOutside);
+  if (window._dropdownClickOutside) {
+    document.removeEventListener('click', window._dropdownClickOutside);
+    document.removeEventListener('mousedown', window._dropdownClickOutside);
+  }
   window._dropdownClickOutside = function(e) {
     if (state.openDropdownKey && !e.target.closest('.dropdown-wrapper')) {
       syncFormToState();
@@ -1607,6 +2170,7 @@ function bindTabEvents() {
       renderTab();
     }
   };
+  document.addEventListener('mousedown', window._dropdownClickOutside);
   document.addEventListener('click', window._dropdownClickOutside);
 
   // History filters
@@ -1635,8 +2199,13 @@ function bindTabEvents() {
         date: posting.date, week: posting.week, campus: posting.campusName || posting.campus,
         floor: posting.floorName || posting.floor, category: posting.category, unit: posting.unit,
         type: posting.type, needleType: posting.needleType, unitPrice: posting.unitPrice,
-        challanNo: posting.challanNo, previousBL: posting.previousBL, rcvd: posting.rcvd, dlvd: posting.dlvd,
+        challanNo: posting.challanNo, itemCode: posting.itemCode || '', previousBL: posting.previousBL, rcvd: posting.rcvd, dlvd: posting.dlvd,
       };
+      // Set SN code input from itemCode when editing
+      if (posting.itemCode) {
+        state.snCodeInput = posting.itemCode;
+        state.snCodeMatch = posting.needleType;
+      }
       state.activeTab = 'newPosting';
       renderTab();
     });
@@ -1694,6 +2263,17 @@ function bindTabEvents() {
   // Settings - Firebase Seed
   const seedBtn = document.getElementById('seedFirebaseBtn');
   if (seedBtn) seedBtn.addEventListener('click', handleSeedFirebase);
+
+  // Settings - Add New Needle Type with SN Code
+  const addNewNeedleBtn = document.getElementById('addNewNeedleBtn');
+  if (addNewNeedleBtn) addNewNeedleBtn.addEventListener('click', handleAddNewNeedleType);
+
+  // Settings - Auto SN Code button
+  const autoSNCodeBtn = document.getElementById('autoSNCodeBtn');
+  if (autoSNCodeBtn) autoSNCodeBtn.addEventListener('click', () => {
+    const snInput = document.getElementById('newNeedleSNCode');
+    if (snInput) snInput.value = 'SN-' + String(getNextSNCodeNumber()).padStart(3, '0');
+  });
 
   // Settings - Bulk add field buttons
   document.querySelectorAll('[data-bulk-field]').forEach(btn => {
@@ -1773,7 +2353,7 @@ function bindTabEvents() {
 
 // ========== EXPORT CSV ==========
 function handleExportCSV() {
-  const headers = ['DATE', 'WEEK', 'CAMPUS NAME', 'FLOOR NAME / LOCATION', 'CATEGORY', 'UNIT', 'TYPE', 'NEEDLE TYPE', 'UNIT PRICE', 'CHALLAN NO', 'PREVIOUS BL', 'RCVD', 'DLVD'];
+  const headers = ['DATE', 'WEEK', 'CAMPUS NAME', 'FLOOR NAME / LOCATION', 'CATEGORY', 'UNIT', 'TYPE', 'NEEDLE TYPE', 'UNIT PRICE', 'CHALLAN NO', 'ITEM CODE', 'PREVIOUS BL', 'RCVD', 'DLVD'];
 
   const filteredData = state.postings.filter(p => {
     const pDate = new Date(p.date);
@@ -1786,7 +2366,7 @@ function handleExportCSV() {
   const rows = filteredData.map(p => [
     p.date, p.week, p.campusName, p.floorName, p.category,
     p.unit, p.type, p.needleType, p.unitPrice, p.challanNo,
-    p.previousBL, p.rcvd, p.dlvd
+    p.itemCode || '', p.previousBL, p.rcvd, p.dlvd
   ]);
 
   const csv = [headers, ...rows].map(r =>
@@ -1976,7 +2556,12 @@ async function handleSeedFirebase() {
 
     for (const item of needlePrices) {
       await fbPush('needlePriceMaster', { ...item, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() });
-      await fbPush('needleTypes', { name: item.needleType, category: item.category });
+      // Find SN code for this needle type from the hardcoded map
+      let snCodeForType = '';
+      for (const [sn, nt] of Object.entries(SN_CODE_MAP)) {
+        if (nt === item.needleType) { snCodeForType = sn; break; }
+      }
+      await fbPush('needleTypes', { name: item.needleType, category: item.category, snCode: snCodeForType });
     }
 
     showToast(`${t('firebaseSeeded')}: ${campuses.length} campuses, ${floorData.length} floors, ${categories.length} categories, ${needlePrices.length} needle types`, 'success');
@@ -2039,6 +2624,61 @@ function bindBulkDeleteButtons() {
   });
 }
 
+// ========== ADD NEW NEEDLE TYPE WITH SN CODE ==========
+async function handleAddNewNeedleType() {
+  const snCodeInput = document.getElementById('newNeedleSNCode');
+  const nameInput = document.getElementById('newNeedleName');
+  const categoryInput = document.getElementById('newNeedleCategory');
+  const unitInput = document.getElementById('newNeedleUnit');
+  const priceInput = document.getElementById('newNeedlePrice');
+
+  const snCode = (snCodeInput?.value || '').trim().toUpperCase();
+  const name = (nameInput?.value || '').trim();
+  const category = categoryInput?.value || '';
+  const unit = unitInput?.value || 'PCS';
+  const unitPrice = parseFloat(priceInput?.value) || 0;
+
+  if (!snCode) {
+    showToast(t('snCodeFormat'), 'error');
+    return;
+  }
+  if (!name) {
+    showToast(t('enterNeedleName'), 'error');
+    return;
+  }
+
+  // Check if SN code already exists
+  const combined = getCombinedSNCodeMap();
+  if (combined[snCode]) {
+    showToast(t('snCodeExists'), 'error');
+    return;
+  }
+
+  // Check if needle type name already exists
+  const existingNeedle = (state.masterData?.needleTypes || []).find(n => n.name.toLowerCase() === name.toLowerCase());
+  if (existingNeedle) {
+    showToast(t('needleNameExists'), 'error');
+    return;
+  }
+
+  try {
+    // Add to needleTypes with SN code
+    await fbPush('needleTypes', { name, category, snCode });
+    // Add to needlePriceMaster
+    await fbPush('needlePriceMaster', {
+      needleType: name, unitPrice, unit, category, snCode,
+      createdAt: new Date().toISOString(), updatedAt: new Date().toISOString()
+    });
+
+    showToast(t('needleAdded'), 'success');
+    await fetchMasterData();
+    renderTab();
+  } catch (e) {
+    console.error('Add needle type error:', e);
+    showToast(t('failedAdd'), 'error');
+  }
+}
+
 // ========== BULK ADD ==========
 async function handleBulkAdd() {
   if (!state.bulkAddText.trim()) {
@@ -2081,14 +2721,35 @@ async function handleBulkAdd() {
         if (!exists) { await fbPush('units', { name: item }); added++; }
         else { skipped++; }
       } else if (state.bulkAddField === 'types') {
-        const exists = (state.masterData?.needleTypes || []).find(n => n.name.toLowerCase() === item.toLowerCase());
-        if (!exists) { await fbPush('needleTypes', { name: item, category: '' }); added++; }
-        else { skipped++; }
-      } else if (state.bulkAddField === 'needleTypes') {
-        const exists = (state.masterData?.needleTypes || []).find(n => n.name.toLowerCase() === item.toLowerCase());
+        // Support SN code format: SN-XXX: Needle Type Name
+        let snCode = '';
+        let needleName = item;
+        const snMatch = item.match(/^(SN-\d+)\s*[:|]\s*(.+)$/i);
+        if (snMatch) {
+          snCode = snMatch[1].toUpperCase();
+          needleName = snMatch[2].trim();
+        }
+        const exists = (state.masterData?.needleTypes || []).find(n => n.name.toLowerCase() === needleName.toLowerCase());
         if (!exists) {
-          await fbPush('needleTypes', { name: item, category: '' });
-          await fbPush('needlePriceMaster', { needleType: item, unitPrice: 0, unit: 'PCS', category: '', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() });
+          await fbPush('needleTypes', { name: needleName, category: '', snCode });
+          if (snCode) {
+            await fbPush('needlePriceMaster', { needleType: needleName, unitPrice: 0, unit: 'PCS', category: '', snCode, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() });
+          }
+          added++;
+        } else { skipped++; }
+      } else if (state.bulkAddField === 'needleTypes') {
+        // Support SN code format: SN-XXX: Needle Type Name
+        let snCode = '';
+        let needleName = item;
+        const snMatch = item.match(/^(SN-\d+)\s*[:|]\s*(.+)$/i);
+        if (snMatch) {
+          snCode = snMatch[1].toUpperCase();
+          needleName = snMatch[2].trim();
+        }
+        const exists = (state.masterData?.needleTypes || []).find(n => n.name.toLowerCase() === needleName.toLowerCase());
+        if (!exists) {
+          await fbPush('needleTypes', { name: needleName, category: '', snCode });
+          await fbPush('needlePriceMaster', { needleType: needleName, unitPrice: 0, unit: 'PCS', category: '', snCode, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() });
           added++;
         } else { skipped++; }
       }
@@ -2138,6 +2799,7 @@ async function handleSave() {
       needleType: fd.needleType,
       unitPrice: fd.unitPrice,
       challanNo: fd.challanNo,
+      itemCode: fd.itemCode || state.snCodeInput || '',
       previousBL: fd.previousBL,
       rcvd: fd.rcvd,
       dlvd: fd.dlvd,
@@ -2157,8 +2819,12 @@ async function handleSave() {
     state.formData = {
       date: new Date().toISOString().split('T')[0], week: calcWeek(new Date().toISOString().split('T')[0]), campus: '',
       floor: '', category: '', unit: '', type: '', needleType: '',
-      unitPrice: 0, challanNo: '', previousBL: 0, rcvd: 0, dlvd: 0,
+      unitPrice: 0, challanNo: '', itemCode: '', previousBL: 0, rcvd: 0, dlvd: 0,
     };
+    state.snCodeInput = '';
+    state.snCodeMatch = null;
+    state.snCodeResults = [];
+    state.snCodeDropdownOpen = false;
 
     await fetchDashboard();
     renderTab();
@@ -2188,6 +2854,7 @@ async function init() {
     btn.addEventListener('click', async () => {
       state.activeTab = btn.dataset.tab;
       state.openDropdownKey = null;
+      state.snCodeDropdownOpen = false;
 
       if (state.activeTab === 'dashboard') await fetchDashboard();
       else if (state.activeTab === 'newPosting') {
